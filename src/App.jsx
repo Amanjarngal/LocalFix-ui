@@ -1,15 +1,22 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar"
+import Footer from "./components/Footer"
 import "./App.css";
 import Home from "./Pages/Home";
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-      </Routes>
+      <Navbar />
+      <main className="pt-20">
+        <Routes>
+          <Route path="/" element={<Home />} />
+        </Routes>
+      </main>
+      <Footer />
     </BrowserRouter>
   );
 }
+
 
 export default App;
