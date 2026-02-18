@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User, Hammer, ChevronRight, ArrowRight, LogOut, LayoutDashboard } from 'lucide-react';
+import { Menu, X, User, Hammer, ChevronRight, ArrowRight, LogOut, LayoutDashboard, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
@@ -67,6 +67,12 @@ const Navbar = () => {
                             <Link to="/provider-enrollment" className="text-slate-600 hover:text-blue-600 font-bold text-sm mr-2">
                                 Become a Partner
                             </Link>
+                            {user && (
+                                <Link to="/cart" className="p-2 text-slate-600 hover:text-blue-600 transition-colors relative">
+                                    <ShoppingCart className="w-5 h-5" />
+                                    {/* Optional Badge if we want to fetch cart count in Navbar context/global state */}
+                                </Link>
+                            )}
                             {!user ? (
                                 <Link to="/login" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-100 flex items-center gap-2 group">
                                     Login
