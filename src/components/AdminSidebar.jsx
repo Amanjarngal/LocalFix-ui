@@ -8,7 +8,8 @@ import {
     ChevronRight,
     LogOut,
     Menu,
-    X
+    X,
+    Wrench
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -20,6 +21,7 @@ const AdminSidebar = () => {
 
     const menuItems = [
         { title: 'Overview', icon: LayoutDashboard, path: '/admin/dashboard' },
+        { title: 'Services', icon: Wrench, path: '/admin/services' },
         { title: 'Users', icon: Users, path: '/admin/users' },
         { title: 'Provider Apps', icon: ClipboardList, path: '/admin/applications' },
     ];
