@@ -13,7 +13,8 @@ import {
     Hammer,
     Calendar,
     Settings,
-    Wallet
+    Wallet,
+    Activity
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -29,6 +30,7 @@ const Sidebar = () => {
         { title: 'Services', icon: Wrench, path: '/admin/services' },
         { title: 'Users', icon: Users, path: '/admin/users' },
         { title: 'Provider Applications', icon: ClipboardList, path: '/admin/applications' },
+        { title: 'Availability Monitor', icon: Activity, path: '/admin/availability' },
         { title: 'Payouts', icon: Wallet, path: '/admin/payouts' },
         { title: 'Platform Settings', icon: Settings, path: '/admin/settings' },
     ];

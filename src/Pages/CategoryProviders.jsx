@@ -22,8 +22,26 @@ const CategoryProviders = () => {
     const [loading, setLoading] = useState(true);
     const [pincode, setPincode] = useState('');
     const [searching, setSearching] = useState(false);
+    const [showReviewsModal, setShowReviewsModal] = useState(false);
+    const [reviews, setReviews] = useState([]);
+    const [loadingReviews, setLoadingReviews] = useState(false);
+    const [reviewedProvider, setReviewedProvider] = useState(null);
 
     const apiUrl = import.meta.env.VITE_API_URL;
+
+    const fetchReviews = async (provider) => {
+        setReviewedProvider(provider);
+        setShowReviewsModal(true);
+        setLoadingReviews(true);
+        try {
+            const res = await axios.get(`${apiUrl}/api/providers/${provider._id}/reviews`);
+            setReviews(res.data.data);
+        } catch (err) {
+            console.error("Failed to load reviews", err);
+        } finally {
+            setLoadingReviews(false);
+        }
+    };
 
     // Fetch initial providers and category info
     useEffect(() => {
@@ -129,24 +147,46 @@ const CategoryProviders = () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {providers.map(provider => (
-                            <div key={provider._id} className="group bg-white rounded-[2.5rem] overflow-hidden border border-slate-100 hover:border-blue-200 hover:shadow-2xl hover:shadow-blue-200/20 transition-all duration-500 flex flex-col h-full">
+                        {[...providers].sort((a, b) => {
+                            const aAvail = a.isAvailable !== false;
+                            const bAvail = b.isAvailable !== false;
+                            if (aAvail === bAvail) return 0;
+                            return aAvail ? -1 : 1;
+                        }).map(provider => (
+                            <div key={provider._id} className={`group rounded-[2.5rem] overflow-hidden border transition-all duration-500 flex flex-col h-full ${provider.isAvailable !== false ? 'bg-white border-slate-100 hover:border-blue-200 hover:shadow-2xl hover:shadow-blue-200/20' : 'bg-slate-50 border-slate-200 opacity-75 grayscale-[0.4]'}`}>
                                 {/* Provider Banner/Photo Area */}
                                 <div className="relative h-48 bg-slate-100 overflow-hidden">
                                     {provider.profilePhoto ? (
                                         <img
                                             src={provider.profilePhoto.startsWith('http') ? provider.profilePhoto : `${apiUrl}/${provider.profilePhoto}`}
                                             alt={provider.businessName}
-                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                            className={`w-full h-full object-cover transition-transform duration-700 ${provider.isAvailable !== false ? 'group-hover:scale-110' : ''}`}
                                         />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-slate-300 bg-gradient-to-br from-slate-50 to-slate-100">
                                             <Briefcase size={64} />
                                         </div>
                                     )}
-                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-xl border border-white/50">
-                                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                                        <span className="text-sm font-black text-slate-900">4.9</span>
+                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-xl border border-white/50">
+                                        <div className="flex items-center gap-0.5">
+                                            {Array.from({ length: 5 }).map((_, i) => (
+                                                <Star
+                                                    key={i}
+                                                    size={14}
+                                                    className={`${i < Math.floor(provider.rating || 4)
+                                                            ? 'fill-amber-500 text-amber-500'
+                                                            : 'text-slate-300'
+                                                        }`}
+                                                />
+                                            ))}
+                                        </div>
+                                        <span className="ml-1 text-sm font-black text-slate-900">{(provider.rating || 4).toFixed(1)}</span>
+                                        <button
+                                            onClick={(e) => { e.preventDefault(); fetchReviews(provider); }}
+                                            className="ml-2 pl-2 border-l border-slate-200 text-[10px] font-bold text-blue-600 hover:text-blue-800 transition-colors uppercase tracking-tight"
+                                        >
+                                            View Reviews
+                                        </button>
                                     </div>
                                     {provider.emergencyAvailability && (
                                         <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-xl font-bold text-[10px] uppercase tracking-wider">
@@ -159,14 +199,27 @@ const CategoryProviders = () => {
                                 <div className="p-8 flex-1 flex flex-col">
                                     <div className="flex justify-between items-start mb-3">
                                         <div>
-                                            <h2 className="text-xl font-black text-slate-900 leading-tight group-hover:text-blue-600 transition-colors">
+                                            <h2 className={`text-xl font-black leading-tight transition-colors ${provider.isAvailable !== false ? 'text-slate-900 group-hover:text-blue-600' : 'text-slate-600'}`}>
                                                 {provider.businessName}
                                             </h2>
-                                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
-                                                {provider.ownerName}
-                                            </p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                                                    {provider.ownerName}
+                                                </p>
+                                                {provider.isAvailable !== false ? (
+                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                                        Online
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                                                        Offline
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                                        <div className={`p-2.5 rounded-xl ${provider.isAvailable !== false ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
                                             <ShieldCheck size={20} />
                                         </div>
                                     </div>
@@ -200,12 +253,21 @@ const CategoryProviders = () => {
                                                 +12
                                             </div>
                                         </div>
-                                        <Link
-                                            to={`/services/${id}/pricing/${provider._id}`}
-                                            className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-blue-600 transition-all group/btn"
-                                        >
-                                            Check Pricing <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                                        </Link>
+                                        {provider.isAvailable !== false ? (
+                                            <Link
+                                                to={`/services/${id}/pricing/${provider._id}`}
+                                                className="px-6 py-2.5 bg-slate-900 text-white rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-blue-600 transition-all group/btn"
+                                            >
+                                                Check Pricing <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
+                                            </Link>
+                                        ) : (
+                                            <button
+                                                disabled
+                                                className="px-6 py-2.5 bg-slate-200 text-slate-500 cursor-not-allowed rounded-xl font-bold text-sm flex items-center gap-2"
+                                            >
+                                                Offline
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -213,6 +275,87 @@ const CategoryProviders = () => {
                     </div>
                 )}
             </div>
+
+            {/* Reviews Modal */}
+            {showReviewsModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setShowReviewsModal(false)} />
+                    <div className="relative w-full max-w-2xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-300">
+                        {/* Modal Header */}
+                        <div className="bg-slate-50 px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl font-black text-slate-900">{reviewedProvider?.businessName}</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <div className="flex gap-0.5">
+                                        {[1, 2, 3, 4, 5].map(i => (
+                                            <Star key={i} size={12} className={i <= Math.floor(reviewedProvider?.rating || 0) ? 'fill-amber-500 text-amber-500' : 'text-slate-300'} />
+                                        ))}
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{reviews.length} Verified Reviews</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowReviewsModal(false)}
+                                className="p-2 hover:bg-white rounded-full transition-colors text-slate-400 hover:text-slate-900"
+                            >
+                                <Plus className="w-6 h-6 rotate-45" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-8 overflow-y-auto max-h-[70vh]">
+                            {loadingReviews ? (
+                                <div className="flex flex-col items-center justify-center py-20">
+                                    <Loader2 className="animate-spin text-blue-600 mb-4" size={40} />
+                                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Loading Reviews...</p>
+                                </div>
+                            ) : reviews.length > 0 ? (
+                                <div className="space-y-6">
+                                    {reviews.map((rev) => (
+                                        <div key={rev.id} className="bg-slate-50/50 p-6 rounded-3xl border border-slate-100 hover:border-blue-100 transition-colors">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-blue-600 font-black shadow-sm border border-slate-100">
+                                                        {rev.customer.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-slate-900">{rev.customer}</h4>
+                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                                            {new Date(rev.date).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-0.5">
+                                                    {[1, 2, 3, 4, 5].map(i => (
+                                                        <Star key={i} size={14} className={i <= rev.rating ? 'fill-amber-500 text-amber-500' : 'text-slate-200'} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <p className="text-sm text-slate-600 leading-relaxed font-medium bg-white/50 p-4 rounded-2xl italic border border-white/80">
+                                                "{rev.review || "The expert did a fantastic job. Very professional and highly recommended for house services!"}"
+                                            </p>
+                                            <div className="mt-4 flex items-center justify-between">
+                                                <span className="px-3 py-1 bg-white text-[10px] font-black text-blue-600 border border-slate-100 rounded-full uppercase tracking-wider">
+                                                    {rev.type}: {rev.serviceName || 'Standard Service'}
+                                                </span>
+                                                <div className="flex items-center gap-1 text-[10px] font-bold text-green-600">
+                                                    <ShieldCheck size={12} /> Verified Service
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-20 bg-slate-50 rounded-4xl border border-dashed border-slate-200">
+                                    <Star size={48} className="mx-auto text-slate-200 mb-4" />
+                                    <h3 className="text-lg font-bold text-slate-800">No reviews yet</h3>
+                                    <p className="text-sm text-slate-500">This expert hasn't received any public reviews yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
