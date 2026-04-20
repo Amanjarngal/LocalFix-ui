@@ -65,10 +65,15 @@ const RenovationProviderList = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {providers.map((provider) => (
+            {[...providers].sort((a, b) => {
+              const aAvail = a.isAvailable !== false;
+              const bAvail = b.isAvailable !== false;
+              if (aAvail === bAvail) return 0;
+              return aAvail ? -1 : 1;
+            }).map((provider) => (
               <div
                 key={provider._id}
-                className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group"
+                className={`rounded-xl shadow-md transition-all duration-300 overflow-hidden group ${provider.isAvailable !== false ? 'bg-white hover:shadow-lg' : 'bg-slate-50 opacity-75 grayscale-[0.4]'}`}
               >
                 {/* Header with Profile Photo */}
                 <div className="h-32 bg-gradient-to-r from-blue-500 to-blue-600 relative overflow-hidden">
@@ -85,9 +90,22 @@ const RenovationProviderList = () => {
                 {/* Content */}
                 <div className="p-6 -mt-8 relative z-10">
                   {/* Business Name */}
-                  <h3 className="text-lg font-black text-slate-900 mb-1 truncate">
-                    {provider.businessName}
-                  </h3>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className={`text-lg font-black truncate ${provider.isAvailable !== false ? 'text-slate-900' : 'text-slate-600'}`}>
+                      {provider.businessName}
+                    </h3>
+                    {provider.isAvailable !== false ? (
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                            Online
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                            Offline
+                        </span>
+                    )}
+                  </div>
 
                   {/* Rating */}
                   <div className="flex items-center gap-2 mb-3">
@@ -136,13 +154,22 @@ const RenovationProviderList = () => {
                   </div>
 
                   {/* Action Button */}
-                  <button
-                    onClick={() => handleConnect(provider._id)}
-                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 group/btn active:scale-95"
-                  >
-                    Connect Now
-                    <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                  </button>
+                  {provider.isAvailable !== false ? (
+                      <button
+                        onClick={() => handleConnect(provider._id)}
+                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2 group/btn active:scale-95"
+                      >
+                        Connect Now
+                        <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
+                      </button>
+                  ) : (
+                      <button
+                        disabled
+                        className="w-full py-2.5 bg-slate-200 text-slate-500 cursor-not-allowed font-bold rounded-lg flex items-center justify-center gap-2"
+                      >
+                        Offline
+                      </button>
+                  )}
                 </div>
               </div>
             ))}

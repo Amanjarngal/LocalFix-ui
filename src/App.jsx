@@ -40,6 +40,7 @@ import ServiceManagement from "./Pages/Admin/ServiceManagement";
 import BookingsManagement from "./Pages/Admin/BookingsManagement";
 import AdminSettings from "./Pages/Admin/AdminSettings";
 import AdminPayouts from "./Pages/Admin/AdminPayouts";
+import AdminAvailabilityManager from "./Pages/Admin/AdminAvailabilityManager";
 import { ServicePage } from "./Pages/ServicePage";
 
 function AppContent() {
@@ -99,6 +100,7 @@ function AppContent() {
               <Route path="bookings" element={<BookingsManagement />} />
               <Route path="settings" element={<AdminSettings />} />
               <Route path="payouts" element={<AdminPayouts />} />
+              <Route path="availability" element={<AdminAvailabilityManager />} />
             </Route>
           </Route>
         </Routes>

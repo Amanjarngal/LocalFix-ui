@@ -113,7 +113,7 @@ const Services = () => {
             </div>
 
             {/* Bottom Trust Section */}
-            <div className="bg-slate-900 text-white py-24 mb-20 overflow-hidden relative">
+            <div className="bg-slate-900 text-white py-24 overflow-hidden relative">
                 <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
                 <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
                     <Heart className="mx-auto text-blue-500 mb-8 w-12 h-12" />

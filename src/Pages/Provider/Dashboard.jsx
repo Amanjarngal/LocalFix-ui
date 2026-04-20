@@ -16,23 +16,31 @@ import { Link } from 'react-router-dom';
 const Dashboard = () => {
     const { user } = useAuth();
     const [bookings, setBookings] = useState([]);
+    const [providerData, setProviderData] = useState(null);
     const [loading, setLoading] = useState(true);
     const apiUrl = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
-        const fetchBookings = async () => {
+        const fetchData = async () => {
             try {
-                const res = await axios.get(`${apiUrl}/api/booking/provider/bookings`, { withCredentials: true });
-                if (res.data.success) {
-                    setBookings(res.data.data);
+                const [bookingRes, providerRes] = await Promise.all([
+                    axios.get(`${apiUrl}/api/booking/provider/bookings`, { withCredentials: true }),
+                    axios.get(`${apiUrl}/api/providers/my/availability`, { withCredentials: true })
+                ]);
+
+                if (bookingRes.data.success) {
+                    setBookings(bookingRes.data.data);
+                }
+                if (providerRes.data.success) {
+                    setProviderData(providerRes.data.data);
                 }
             } catch (error) {
-                console.error("Failed to fetch dashboard bookings", error);
+                console.error("Failed to fetch dashboard data", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchBookings();
+        fetchData();
     }, [apiUrl]);
 
     // Derived stats
@@ -40,17 +48,20 @@ const Dashboard = () => {
     const completedBookings = bookings.filter(b => b.status === 'completed');
     const pendingBookings = bookings.filter(b => !['completed', 'cancelled'].includes(b.status)).length;
     
-    // Calculate Average Rating based on customerRating
+    // Prioritize official rating from provider profile, fallback to calc or 5.0
+    const officialRating = providerData?.rating;
     const ratedBookings = completedBookings.filter(b => b.customerRating);
-    const avgRating = ratedBookings.length > 0 
+    const calculatedRating = ratedBookings.length > 0 
         ? (ratedBookings.reduce((sum, b) => sum + b.customerRating, 0) / ratedBookings.length).toFixed(1) 
-        : '5.0'; // Default if no ratings
+        : '5.0';
+    
+    const displayRating = officialRating ? officialRating.toFixed(1) : calculatedRating;
 
     const stats = [
         { label: 'Total Bookings', value: totalBookings.toString(), icon: Calendar, color: 'text-blue-600', bg: 'bg-blue-50' },
         { label: 'Completed', value: completedBookings.length.toString(), icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50' },
         { label: 'Active Jobs', value: pendingBookings.toString(), icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
-        { label: 'Rating', value: avgRating, icon: Star, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+        { label: 'Rating', value: displayRating, icon: Star, color: 'text-yellow-600', bg: 'bg-yellow-50' },
     ];
 
     const recentBookings = bookings.slice(0, 3);

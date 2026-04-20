@@ -1,54 +1,114 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Search, MapPin, Zap, Star } from 'lucide-react';
 
 const Hero = () => {
     return (
-        <div className="relative bg-white overflow-hidden">
-            <div className="max-w-7xl mx-auto">
-                <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-                    <svg
-                        className="hidden lg:block absolute right-0 inset-y-0 h-full w-48 text-white transform translate-x-1/2"
-                        fill="currentColor"
-                        viewBox="0 0 100 100"
-                        preserveAspectRatio="none"
-                        aria-hidden="true"
-                    >
-                        <polygon points="50,0 100,0 50,100 0,100" />
-                    </svg>
+        <section className="relative pt-32 pb-20 bg-white overflow-hidden min-h-screen flex flex-col items-center justify-center">
+            {/* Massive Abstract Glows */}
+            <div className="absolute top-0 -translate-y-1/2 w-full h-[600px] bg-gradient-to-b from-blue-50 to-white -z-10" />
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
 
-                    <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-                        <div className="sm:text-center lg:text-left">
-                            <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                                <span className="block xl:inline">Reliable Repairs for Your</span>{' '}
-                                <span className="block text-blue-600 xl:inline">Modern Home</span>
-                            </h1>
-                            <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                                Connect with the best local electricians, plumbers, and technicians in minutes. Fast, transparent, and guaranteed service at your doorstep.
-                            </p>
-                            <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                                <div className="rounded-full shadow">
-                                    <button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10 transition-all transform hover:scale-105">
-                                        Book a Service
-                                    </button>
-                                </div>
-                                <div className="mt-3 sm:mt-0 sm:ml-3">
-                                    <button className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-full text-blue-700 bg-blue-100 hover:bg-blue-200 md:py-4 md:text-lg md:px-10 transition-all transform hover:scale-105">
-                                        How it Works
-                                    </button>
-                                </div>
+            <div className="max-w-6xl mx-auto px-6 w-full text-center relative z-10">
+                
+                {/* Badge */}
+                <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-slate-50 border border-slate-100 rounded-full mb-10 shadow-sm"
+                >
+                    <Star className="text-blue-500 fill-blue-500" size={14} />
+                    <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-600">Rated #1 Home Service App 2026</span>
+                </motion.div>
+
+                {/* Main Headline */}
+                <motion.h1 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-6xl md:text-8xl font-black text-slate-900 leading-[0.95] tracking-tighter mb-8 max-w-5xl mx-auto"
+                >
+                    Don't DIY It. <br className="hidden md:block" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Just LocalFix It.</span>
+                </motion.h1>
+
+                <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-14 font-medium"
+                >
+                    Book top-rated plumbers, electricians, and carpenters in your neighborhood instantly. Transparent pricing. Zero hassle.
+                </motion.p>
+
+                {/* Floating Search / Booking Bar */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="max-w-4xl mx-auto bg-white p-3 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-slate-100 flex flex-col md:flex-row items-center gap-3 relative z-20"
+                >
+                    <div className="flex-1 flex items-center gap-3 px-6 py-4 w-full md:w-auto">
+                        <MapPin className="text-slate-400" size={24} />
+                        <input 
+                            type="text" 
+                            placeholder="Zip code or Area" 
+                            className="bg-transparent border-none outline-none text-slate-900 w-full font-bold placeholder:font-medium placeholder:text-slate-400"
+                        />
+                    </div>
+                    <div className="hidden md:block w-[1px] h-10 bg-slate-100" />
+                    <div className="flex-1 flex items-center gap-3 px-6 py-4 w-full md:w-auto">
+                        <Search className="text-slate-400" size={24} />
+                        <input 
+                            type="text" 
+                            placeholder="What do you need help with?" 
+                            className="bg-transparent border-none outline-none text-slate-900 w-full font-bold placeholder:font-medium placeholder:text-slate-400"
+                        />
+                    </div>
+                    <button className="w-full md:w-auto px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-full transition-colors flex-shrink-0 shadow-lg shadow-blue-600/30">
+                        Find Experts
+                    </button>
+                </motion.div>
+
+                {/* Dynamic Image Grid Trailer */}
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                    className="mt-20 relative px-4"
+                >
+                    {/* Floating Info Card */}
+                    <div className="absolute top-10 -left-10 md:left-0 z-20 bg-white p-5 rounded-2xl shadow-2xl border border-slate-50 flex items-center gap-4 animate-[bounce_4s_ease-in-out_infinite]">
+                        <div className="bg-blue-50 p-3 rounded-xl"><Zap className="text-blue-600" size={24} fill="currentColor" /></div>
+                        <div className="text-left">
+                            <p className="text-sm font-black text-slate-900">Under 60 Mins</p>
+                            <p className="text-[10px] font-bold uppercase text-slate-500">Average Response</p>
+                        </div>
+                    </div>
+
+                    {/* Main Visual */}
+                    <div className="h-[400px] md:h-[500px] w-full rounded-[3rem] overflow-hidden relative shadow-2xl group">
+                        <img 
+                            src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" 
+                            alt="Clean Home Renovation" 
+                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
+                        
+                        {/* Internal Label */}
+                        <div className="absolute bottom-10 left-10 text-left">
+                            <div className="inline-block px-4 py-2 bg-white/20 backdrop-blur-md rounded-xl text-white font-bold text-sm border border-white/30">
+                                🔧 Plumbing & Maintenance
                             </div>
                         </div>
-                    </main>
-                </div>
+                    </div>
+
+                </motion.div>
             </div>
-            <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-                <img
-                    className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
-                    src="https://media-production.lp-cdn.com/cdn-cgi/image/format=auto,quality=85,fit=scale-down,width=1280/https://media-production.lp-cdn.com/media/2f1d6bfb-0140-4f8a-941e-9e218a4da9b5"
-                    alt="Professional Repair Service"
-                />
-            </div>
-        </div>
+        </section>
     );
 };
 
 export default Hero;
+
