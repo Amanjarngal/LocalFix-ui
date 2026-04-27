@@ -125,7 +125,7 @@ const Chatbot = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 50, scale: 0.9 }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="absolute bottom-20 right-0 w-[370px] sm:w-[420px] h-[600px] bg-white rounded-[2rem] shadow-2xl flex flex-col border border-slate-200 overflow-hidden"
+                        className="absolute bottom-20 right-0 w-[400px] sm:w-[480px] h-[520px] bg-white rounded-[2rem] shadow-2xl flex flex-col border border-slate-200 overflow-hidden"
                         style={{ boxShadow: '0 25px 80px -12px rgba(0,0,0,0.25)' }}
                     >
                         {/* ─── HEADER ─── */}

@@ -44,6 +44,7 @@ import AdminAvailabilityManager from "./Pages/Admin/AdminAvailabilityManager";
 import AdminComplaints from "./Pages/Admin/AdminComplaints";
 import { ServicePage } from "./Pages/ServicePage";
 import Chatbot from "./components/Chatbot";
+import ContactPage from "./Pages/Contact";
 
 function AppContent() {
   const location = useLocation();
@@ -73,6 +74,7 @@ function AppContent() {
           </Route>
 
           <Route path="/provider-enrollment" element={<ProviderEnrollment />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/About" element={<About />} />
           <Route path="/change-password" element={<ChangePassword />} />
 
