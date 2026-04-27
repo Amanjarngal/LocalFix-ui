@@ -14,6 +14,7 @@ import {
     CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useSocket } from '../../context/SocketContext';
 
 const Orders = () => {
     const { user } = useAuth();
@@ -38,10 +39,33 @@ const Orders = () => {
             }
         };
         fetchAvailableRequests();
-        
-        const interval = setInterval(fetchAvailableRequests, 15000);
-        return () => clearInterval(interval);
     }, [apiUrl]);
+
+    const socket = useSocket();
+
+    useEffect(() => {
+        if (!socket) return;
+        
+        socket.on('booking_update', (data) => {
+            if (data.type === 'created' || data.type === 'status_changed') {
+                if (data.booking.status === 'pending' && !data.booking.provider) {
+                    setAvailableRequests(prev => {
+                        if (!prev.find(b => b._id === data.booking._id)) {
+                            toast.success('New matching request arrived!');
+                            return [data.booking, ...prev];
+                        }
+                        return prev;
+                    });
+                } else {
+                    setAvailableRequests(prev => prev.filter(b => b._id !== data.booking._id));
+                }
+            }
+        });
+
+        return () => {
+            socket.off('booking_update');
+        };
+    }, [socket]);
 
     const handleAccept = async (bookingId) => {
         try {

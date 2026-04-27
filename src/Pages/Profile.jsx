@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { User, MapPin, Phone, Plus, Trash2, Edit2, CheckCircle, ChevronRight, Settings, Star, Hammer, Clock, DollarSign, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { User, MapPin, Phone, Plus, Trash2, Edit2, CheckCircle, ChevronRight, Settings, Star, Hammer, Clock, DollarSign, AlertCircle, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import toast from 'react-hot-toast';
 import { getMyRenovationRequests } from '../services/renovationService';
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,6 +13,7 @@ const Profile = () => {
     const [addresses, setAddresses] = useState([]);
     const [bookings, setBookings] = useState([]);
     const [renovations, setRenovations] = useState([]);
+    const [complaints, setComplaints] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'bookings', 'renovations', 'addresses', 'settings'
     const [selectedBooking, setSelectedBooking] = useState(null);
@@ -32,14 +34,41 @@ const Profile = () => {
     const [submittingRating, setSubmittingRating] = useState(false);
 
     const apiUrl = import.meta.env.VITE_API_URL;
+    const socket = useSocket();
 
     useEffect(() => {
         if (user) {
             fetchAddresses();
             fetchBookings();
             fetchRenovations();
+            fetchComplaints();
         }
     }, [user]);
+
+    // Real-time Socket.IO listeners
+    useEffect(() => {
+        if (!socket) return;
+
+        socket.on('booking_status_changed', (data) => {
+            setBookings(prev => prev.map(b => b._id === data.bookingId ? { ...b, status: data.status } : b));
+            toast.success(`Booking #${data.bookingId.slice(-6)} updated to: ${data.status}`);
+        });
+
+        socket.on('complaint_updated', (data) => {
+            setComplaints(prev => prev.map(c => c._id === data.complaintId ? { ...c, status: data.status, adminResponse: data.adminResponse } : c));
+            toast.success(`Complaint #${data.complaintId.slice(-6)} status: ${data.status}`);
+        });
+
+        socket.on('complaint_created', (complaint) => {
+            setComplaints(prev => [complaint, ...prev]);
+        });
+
+        return () => {
+            socket.off('booking_status_changed');
+            socket.off('complaint_updated');
+            socket.off('complaint_created');
+        };
+    }, [socket]);
 
     const fetchRenovations = async () => {
         try {
@@ -58,6 +87,17 @@ const Profile = () => {
             }
         } catch (error) {
             console.error("Failed to fetch bookings", error);
+        }
+    };
+
+    const fetchComplaints = async () => {
+        try {
+            const res = await axios.get(`${apiUrl}/api/complaints`, { withCredentials: true });
+            if (res.data.success) {
+                setComplaints(res.data.data || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch complaints", error);
         }
     };
 
@@ -167,6 +207,7 @@ const Profile = () => {
     const sidebarItems = [
         { id: 'overview', title: 'Overview', icon: User },
         { id: 'bookings', title: 'My Bookings', icon: ChevronRight },
+        { id: 'complaints', title: 'My Complaints', icon: AlertTriangle },
         { id: 'renovations', title: 'My Projects', icon: Hammer },
         { id: 'addresses', title: 'Addresses', icon: MapPin },
         { id: 'settings', title: 'Settings', icon: Settings },
@@ -308,6 +349,64 @@ const Profile = () => {
                                 <button className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg shadow-blue-200 hover:bg-blue-700 transition" onClick={() => setActiveTab('overview')}>
                                     Browse Services
                                 </button>
+                            </div>
+                        )}
+                    </div>
+                );
+            case 'complaints':
+                return (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-2xl font-black text-slate-900">My Complaints</h2>
+                            <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold">{complaints.length} Filed</span>
+                        </div>
+                        
+                        {complaints.length > 0 ? (
+                            <div className="grid gap-4">
+                                {complaints.map((complaint) => (
+                                    <div key={complaint._id} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div>
+                                                <h3 className="text-base font-bold text-slate-900">{complaint.title}</h3>
+                                                <p className="text-xs text-slate-500 mt-0.5">Complaint ID: <span className="font-mono">#{complaint._id?.slice(-8)}</span></p>
+                                            </div>
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                                complaint.status === 'pending' ? 'bg-amber-50 text-amber-600' :
+                                                complaint.status === 'in-progress' ? 'bg-blue-50 text-blue-600' :
+                                                complaint.status === 'resolved' ? 'bg-green-50 text-green-600' :
+                                                complaint.status === 'rejected' ? 'bg-red-50 text-red-600' :
+                                                'bg-slate-50 text-slate-600'
+                                            }`}>
+                                                {complaint.status}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-slate-600 leading-relaxed line-clamp-2 mb-3">{complaint.description}</p>
+                                        <div className="grid grid-cols-2 gap-4 py-3 border-t border-slate-50">
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Category</p>
+                                                <p className="text-sm font-bold text-slate-700 capitalize">{complaint.aiCategory?.replace('_', ' ') || 'General'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Filed On</p>
+                                                <p className="text-sm font-bold text-slate-700">{new Date(complaint.createdAt).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                        {complaint.adminResponse && (
+                                            <div className="mt-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                                                <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Admin Response</p>
+                                                <p className="text-sm text-blue-800">{complaint.adminResponse}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-white p-16 rounded-4xl border border-dashed border-slate-200 text-center">
+                                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <AlertTriangle className="w-10 h-10 text-slate-200" />
+                                </div>
+                                <h3 className="text-xl font-bold text-slate-800 mb-2">No complaints filed</h3>
+                                <p className="text-slate-500 mb-4">You haven't filed any complaints yet. Use the AI chatbot if you need to.</p>
                             </div>
                         )}
                     </div>

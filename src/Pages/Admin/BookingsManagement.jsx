@@ -14,6 +14,7 @@ import {
     Phone
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useSocket } from '../../context/SocketContext';
 
 const BookingsManagement = () => {
     const [bookings, setBookings] = useState([]);
@@ -39,6 +40,26 @@ const BookingsManagement = () => {
 
         fetchBookings();
     }, [apiUrl]);
+
+    const socket = useSocket();
+
+    useEffect(() => {
+        if (!socket) return;
+        
+        socket.on('booking_created', (booking) => {
+            setBookings(prev => [booking, ...prev]);
+            toast.success('New booking received!');
+        });
+        
+        socket.on('booking_update', (data) => {
+            setBookings(prev => prev.map(b => b._id === data.booking._id ? data.booking : b));
+        });
+
+        return () => {
+            socket.off('booking_created');
+            socket.off('booking_update');
+        };
+    }, [socket]);
 
     const filteredBookings = bookings.filter(booking =>
         booking._id.toLowerCase().includes(searchTerm.toLowerCase()) ||

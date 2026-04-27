@@ -1,19 +1,14 @@
 import Services from "./Services";
-import ServiceHero from "../components/services/ServiceHero";
-import { HowItWorks } from '../components/Home Page/HowItWorks';
-import { HouseRenovation } from '../components/Home Page/HouseRenovation';
-import { Testimonials } from '../components/Home Page/Testimonials';
-import { FAQ } from '../components/Home Page/FAQ';
+import ServiceHero from "../components/services/ServiceHero"
+import HowItWorks from "../components/services/HowItWorks"
 
 export const ServicePage = () => {
     return (
-        <div className="bg-white">
+        <div className="bg-white min-h-screen">
             <ServiceHero />
-            <Services />
-            <HouseRenovation />
             <HowItWorks />
-            <Testimonials />
-            <FAQ />
+            <Services />
+
         </div>
     )
 }

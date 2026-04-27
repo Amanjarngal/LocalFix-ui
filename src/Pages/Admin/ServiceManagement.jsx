@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import {
     Plus,
@@ -11,7 +11,9 @@ import {
     Search,
     AlertCircle,
     CheckCircle2,
-    X
+    X,
+    Upload,
+    ImageIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -32,6 +34,10 @@ const ServiceManagement = () => {
     const [currentService, setCurrentService] = useState(null); // If null, adding new service
     const [currentProblem, setCurrentProblem] = useState(null); // If null, adding new problem
     const [targetServiceId, setTargetServiceId] = useState(null); // For adding problem to a specific service
+    const [imagePreview, setImagePreview] = useState(null);
+    const [imageFile, setImageFile] = useState(null);
+    const [saving, setSaving] = useState(false);
+    const fileInputRef = useRef(null);
 
     const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -75,28 +81,62 @@ const ServiceManagement = () => {
         }
     };
 
+    // --- Image Handling ---
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error("Image size must be less than 5MB");
+                return;
+            }
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => setImagePreview(reader.result);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeImage = () => {
+        setImageFile(null);
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
     // --- Service CRUD ---
     const handleSaveService = async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = {
-            name: formData.get('name'),
-            description: formData.get('description'),
-            icon: formData.get('icon')
-        };
+        setSaving(true);
+        const form = e.target;
+        const formData = new FormData();
+        formData.append('name', form.name.value);
+        formData.append('description', form.description.value);
+        formData.append('icon', form.icon.value);
+
+        // Append image file if selected
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
 
         try {
             if (currentService) {
-                await axios.put(`${apiUrl}/api/services/${currentService._id}`, data);
+                await axios.put(`${apiUrl}/api/services/${currentService._id}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
                 toast.success("Service updated");
             } else {
-                await axios.post(`${apiUrl}/api/services`, data);
+                await axios.post(`${apiUrl}/api/services`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                });
                 toast.success("Service created");
             }
             setIsServiceModalOpen(false);
+            setImageFile(null);
+            setImagePreview(null);
             fetchServices();
         } catch (error) {
             toast.error(error.response?.data?.message || "Operation failed");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -150,6 +190,8 @@ const ServiceManagement = () => {
 
     const openServiceModal = (service = null) => {
         setCurrentService(service);
+        setImageFile(null);
+        setImagePreview(service?.image || null);
         setIsServiceModalOpen(true);
     };
 
@@ -185,10 +227,20 @@ const ServiceManagement = () => {
                             onClick={() => toggleServiceExpansion(service._id)}
                         >
                             <div className="flex items-center gap-4">
-                                <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
-                                    {/* Ideally render dynamic icon here, fallback to Wrench */}
-                                    <Wrench size={20} />
-                                </div>
+                                {/* Service Image Thumbnail */}
+                                {service.image ? (
+                                    <div className="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                                        <img
+                                            src={service.image}
+                                            alt={service.name}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="p-2 bg-orange-100 rounded-lg text-orange-600">
+                                        <Wrench size={20} />
+                                    </div>
+                                )}
                                 <div>
                                     <h3 className="font-semibold text-gray-800">{service.name}</h3>
                                     <p className="text-sm text-gray-500 line-clamp-1">{service.description}</p>
@@ -272,7 +324,7 @@ const ServiceManagement = () => {
             {/* Service Modal */}
             {isServiceModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95">
+                    <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center p-6 border-b border-gray-100">
                             <h2 className="text-xl font-bold text-gray-800">
                                 {currentService ? "Edit Service" : "Add New Service"}
@@ -281,7 +333,60 @@ const ServiceManagement = () => {
                                 <X size={24} />
                             </button>
                         </div>
-                        <form onSubmit={handleSaveService} className="p-6 space-y-4">
+                        <form onSubmit={handleSaveService} className="p-6 space-y-5">
+                            {/* Image Upload Section */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Service Image</label>
+                                <div className="flex flex-col items-center gap-4">
+                                    {imagePreview ? (
+                                        <div className="relative w-full h-48 rounded-xl overflow-hidden border-2 border-dashed border-gray-200 group">
+                                            <img
+                                                src={imagePreview}
+                                                alt="Preview"
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className="px-3 py-1.5 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+                                                >
+                                                    Change
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={removeImage}
+                                                    className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="w-full h-40 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-3 text-gray-400 hover:border-orange-400 hover:text-orange-500 hover:bg-orange-50/30 transition-all cursor-pointer"
+                                        >
+                                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                                                <ImageIcon size={24} />
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-sm font-medium">Click to upload image</p>
+                                                <p className="text-xs text-gray-400 mt-1">PNG, JPG, WebP up to 5MB</p>
+                                            </div>
+                                        </button>
+                                    )}
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="hidden"
+                                    />
+                                </div>
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Service Name</label>
                                 <input
@@ -322,8 +427,12 @@ const ServiceManagement = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                                    disabled={saving}
+                                    className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
+                                    {saving && (
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    )}
                                     {currentService ? "Update Service" : "Create Service"}
                                 </button>
                             </div>
