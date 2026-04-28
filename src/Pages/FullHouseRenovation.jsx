@@ -1,200 +1,264 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { 
-  Hammer, 
-  Paintbrush, 
-  Lightbulb, 
-  ShieldCheck, 
-  ArrowRight, 
-  Sparkles, 
-  Home, 
-  Layers, 
-  CheckCircle2, 
-  Clock, 
-  MapPin, 
-  DollarSign,
-  ChevronRight,
-  Zap,
-  Building2,
-  HardHat,
-  Gem
+import {
+    MapPin,
+    Star,
+    Award,
+    Briefcase,
+    ShieldCheck,
+    ArrowRight,
+    Search,
+    Loader2,
+    SearchX,
+    ChevronRight,
+    Zap,
+    Building2,
+    HardHat
 } from 'lucide-react';
 
 const FullHouseRenovation = () => {
-  const steps = [
-    {
-      icon: <Sparkles className="text-blue-600" />,
-      title: "Define Vision",
-      desc: "Share your structural goals and design preferences with our AI vetting system."
-    },
-    {
-      icon: <Layers className="text-blue-600" />,
-      title: "Receive Bids",
-      desc: "Top-tier architectural firms review your scope and provide technical proposals."
-    },
-    {
-      icon: <ShieldCheck className="text-blue-600" />,
-      title: "Hire Experts",
-      desc: "Compare quotes, verify certifications, and hire the perfect partner for your project."
-    }
-  ];
+    const navigate = useNavigate();
+    const [providers, setProviders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [pincode, setPincode] = useState('');
+    const [searching, setSearching] = useState(false);
 
-  return (
-    <div className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
-      
-      {/* Light Hero Section */}
-      <section className="relative pt-32 pb-24 px-6 md:px-12 overflow-hidden bg-slate-50 border-b border-slate-100">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-100/50 rounded-full blur-[120px] -mr-64 -mt-64" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-50 rounded-full blur-[100px] -ml-64 -mb-64 opacity-60" />
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            <div className="flex-1 text-center lg:text-left">
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 font-black text-[10px] uppercase tracking-widest mb-8 border border-blue-100 shadow-sm"
-              >
-                <Zap size={14} fill="currentColor" /> Premium Architectural Services
-              </motion.div>
-              <h1 className="text-5xl md:text-8xl font-black mb-8 leading-[0.9] tracking-tighter">
-                Transform <br /> Your <span className="text-blue-600">Sanctuary.</span>
-              </h1>
-              <p className="text-lg md:text-xl text-slate-500 font-medium mb-12 max-w-2xl leading-relaxed">
-                Experience full-house renovation with a modern, transparent approach. 
-                Connect with elite professionals and manage your home's transformation effortlessly.
-              </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                <Link
-                  to="/full-house-renovation/request"
-                  className="px-10 py-5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-3 active:scale-95"
-                >
-                  Post Your Project <ArrowRight size={20} />
-                </Link>
-                <Link
-                  to="/full-house-renovation/my-requests"
-                  className="px-10 py-5 bg-white border border-slate-200 text-slate-900 font-black rounded-2xl hover:bg-slate-50 transition-all shadow-sm"
-                >
-                  View Dashboard
-                </Link>
-              </div>
-            </div>
+    const apiUrl = import.meta.env.VITE_API_URL;
 
-            <div className="flex-1 relative">
-                <div className="relative z-10 bg-white rounded-[3rem] p-4 shadow-2xl border border-slate-100">
+    const fetchProviders = async (searchPin = '') => {
+        setSearching(true);
+        try {
+            let url = `${apiUrl}/api/renovations/providers`;
+            if (searchPin) url += `?pincode=${searchPin}`;
+            
+            const res = await axios.get(url);
+            setProviders(res.data.data);
+            
+            if (searchPin && res.data.data.length > 0) {
+                toast.success(`Found experts in ${searchPin}`);
+            } else if (searchPin) {
+                toast.error(`No experts found in ${searchPin}`);
+            }
+        } catch (err) {
+            console.error("Failed to load providers", err);
+            toast.error("Error connecting to server");
+        } finally {
+            setSearching(false);
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProviders();
+    }, [apiUrl]);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (pincode.length === 6) {
+            fetchProviders(pincode);
+        } else {
+            toast.error("Please enter a valid 6-digit pincode");
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-slate-50 pb-20">
+            {/* Premium Hero Section */}
+            <div className="relative bg-[#0A0F1C] pt-24 pb-32 overflow-hidden border-b border-slate-200">
+                <div className="absolute inset-0 z-0">
                     <img 
-                        src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=1000" 
-                        alt="Modern Interior" 
-                        className="rounded-[2.5rem] w-full h-[500px] object-cover shadow-inner"
+                        src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&q=80&w=1600" 
+                        alt="bg" 
+                        className="w-full h-full object-cover opacity-20 object-center" 
                     />
-                    <div className="absolute -bottom-8 -left-8 bg-white p-6 rounded-3xl shadow-2xl border border-slate-50 max-w-[200px]">
-                        <div className="flex items-center gap-3 mb-2">
-                            <Gem className="text-blue-600" size={20} />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Elite Rank</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1C] to-transparent" />
+                    <div className="absolute top-0 right-0 -mr-32 -mt-32 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+                </div>
+
+                <div className="max-w-7xl mx-auto px-6 relative z-10">
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+                        <div className="flex-1 text-center lg:text-left">
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs uppercase tracking-widest mb-6 backdrop-blur-sm"
+                            >
+                                <Zap size={14} fill="currentColor" /> Premium Architectural Services
+                            </motion.div>
+                            <h1 className="text-5xl lg:text-8xl font-black text-white leading-[0.9] tracking-tighter mb-8">
+                                Transform <br /> Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Sanctuary.</span>
+                            </h1>
+                            <p className="text-lg text-slate-300 font-medium max-w-xl mx-auto lg:mx-0 mb-10">
+                                Connect with top-tier renovation experts. Enter your location to find verified professionals near you.
+                            </p>
+                            <div className="flex flex-col sm:flex-row items-center gap-4">
+                                <Link
+                                    to="/full-house-renovation/request"
+                                    className="px-8 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center gap-3"
+                                >
+                                    Post Your Project <ArrowRight size={20} />
+                                </Link>
+                                <Link
+                                    to="/full-house-renovation/my-requests"
+                                    className="px-8 py-4 bg-white/5 border border-white/10 text-white font-black rounded-2xl hover:bg-white/10 transition-all backdrop-blur-sm"
+                                >
+                                    My Dashboard
+                                </Link>
+                            </div>
                         </div>
-                        <p className="text-sm font-black text-slate-900">Verified Professional Network</p>
+
+                        {/* Search Card */}
+                        <div className="w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-2xl relative">
+                            <h3 className="text-2xl font-black text-slate-900 mb-2">Find Experts</h3>
+                            <p className="text-sm text-slate-500 font-medium mb-8">Check availability of top firms in your area</p>
+                            
+                            <form onSubmit={handleSearch} className="space-y-6">
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-blue-500">
+                                        <MapPin size={22} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter 6-digit Pincode"
+                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-5 pl-14 pr-6 font-bold text-slate-900 text-lg focus:outline-none focus:border-blue-500 focus:bg-white transition-all"
+                                        value={pincode}
+                                        maxLength={6}
+                                        onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={searching || pincode.length !== 6}
+                                    className="w-full bg-slate-900 hover:bg-blue-600 disabled:bg-slate-200 text-white font-black py-5 rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3 text-lg"
+                                >
+                                    {searching ? <Loader2 className="animate-spin" size={24} /> : "Search Pros"}
+                                    {!searching && <Search size={20} />}
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Features Grid */}
-      <section className="py-32 px-6 md:px-12 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-24">
-            <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight">Evolved Renovation.</h2>
-            <p className="text-slate-500 font-medium max-w-2xl mx-auto">Our platform streamlines complex home transformations through technology and vetted partnerships.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {steps.map((step, idx) => (
-              <motion.div 
-                key={idx}
-                whileHover={{ y: -10 }}
-                className="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 hover:border-blue-200 transition-all"
-              >
-                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-sm border border-slate-100">
-                  {step.icon}
-                </div>
-                <h3 className="text-2xl font-black text-slate-900 mb-4">{step.title}</h3>
-                <p className="text-slate-500 font-medium leading-relaxed">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Value Proposition */}
-      <section className="py-32 px-6 md:px-12 bg-slate-900 text-white relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[120px]" />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row items-center gap-20">
-            <div className="flex-1">
-              <h2 className="text-4xl md:text-6xl font-black mb-10 leading-tight tracking-tighter">
-                Why Professionals <br /> Choose <span className="text-blue-500">LocalFix.</span>
-              </h2>
-              <div className="space-y-8">
-                {[
-                  { icon: <Building2 />, title: "Full Structural Support", desc: "From foundation to finishing, we cover every architectural discipline." },
-                  { icon: <ShieldCheck />, title: "Certified Contractors", desc: "Every professional on our board is thoroughly vetted for quality and trust." },
-                  { icon: <Clock />, title: "Real-Time Tracking", desc: "Monitor your project's progress and milestones from a centralized dashboard." }
-                ].map((item, idx) => (
-                  <div key={idx} className="flex gap-6">
-                    <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 shrink-0">
-                      {item.icon}
-                    </div>
+            {/* Providers List Grid */}
+            <div className="max-w-7xl mx-auto px-6 py-20">
+                <div className="flex items-center justify-between mb-12">
                     <div>
-                      <h4 className="text-xl font-bold mb-2">{item.title}</h4>
-                      <p className="text-slate-400 font-medium">{item.desc}</p>
+                        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Verified Professionals</h2>
+                        <p className="text-slate-500 font-medium">Top-rated firms for full house transformations.</p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex-1 grid grid-cols-2 gap-6">
-                <div className="space-y-6 pt-12">
-                    <div className="aspect-square bg-blue-600 rounded-[2rem] p-8 flex flex-col justify-end">
-                        <p className="text-4xl font-black mb-2">98%</p>
-                        <p className="text-xs font-bold uppercase tracking-widest opacity-80">Satisfaction Rate</p>
-                    </div>
-                    <div className="aspect-[4/5] bg-slate-800 rounded-[2rem] overflow-hidden">
-                        <img src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80" className="w-full h-full object-cover grayscale opacity-50" />
-                    </div>
+                    {providers.length > 0 && (
+                        <div className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-sm border border-blue-100">
+                            {providers.length} Firms Found
+                        </div>
+                    )}
                 </div>
-                <div className="space-y-6">
-                    <div className="aspect-[4/5] bg-slate-800 rounded-[2rem] overflow-hidden">
-                        <img src="https://images.unsplash.com/photo-1503387762-592dee58c460?auto=format&fit=crop&q=80" className="w-full h-full object-cover grayscale opacity-50" />
-                    </div>
-                    <div className="aspect-square bg-white text-slate-900 rounded-[2rem] p-8 flex flex-col justify-end">
-                        <p className="text-4xl font-black mb-2">500+</p>
-                        <p className="text-xs font-bold uppercase tracking-widest opacity-50 text-slate-400">Experts Joined</p>
-                    </div>
-                </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Final Call to Action */}
-      <section className="py-32 px-6 md:px-12 bg-white text-center">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-8 tracking-tighter">Ready to Build?</h2>
-          <p className="text-slate-500 text-lg mb-12 font-medium leading-relaxed">
-            Take the first step towards your dream home today. Join hundreds of satisfied homeowners who transformed their living spaces with LocalFix.
-          </p>
-          <Link
-            to="/full-house-renovation/request"
-            className="inline-flex px-12 py-6 bg-blue-600 text-white font-black rounded-3xl hover:bg-blue-700 transition-all shadow-2xl shadow-blue-600/30 items-center justify-center gap-4 group"
-          >
-            Start Your Transformation <ChevronRight size={24} className="group-hover:translate-x-1 transition-transform" />
-          </Link>
+                {loading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                        {[1, 2, 3, 4, 5, 6].map(n => (
+                            <div key={n} className="h-96 bg-white rounded-[2.5rem] border border-slate-100 animate-pulse shadow-sm" />
+                        ))}
+                    </div>
+                ) : providers.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-24 bg-white rounded-[3rem] border border-slate-100 shadow-xl">
+                        <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-8 border border-slate-100">
+                            <SearchX size={48} />
+                        </div>
+                        <h2 className="text-3xl font-black text-slate-900">No Pros Found</h2>
+                        <p className="text-slate-500 mt-3 max-w-sm text-center font-medium">
+                            We haven't found any renovation experts in <span className="text-blue-600 font-bold">"{pincode || 'your area'}"</span>. 
+                            Try another pincode or check all experts.
+                        </p>
+                        <button
+                            onClick={() => { setPincode(''); fetchProviders(); }}
+                            className="mt-10 px-10 py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-blue-600 transition-all shadow-xl active:scale-95"
+                        >
+                            Show All Experts
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                        {providers.map(provider => (
+                            <div key={provider._id} className="group bg-white rounded-[3rem] overflow-hidden border border-slate-100 hover:border-blue-200 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-blue-600/10 flex flex-col">
+                                {/* Photo Area */}
+                                <div className="relative h-64 bg-slate-100 overflow-hidden">
+                                    {provider.profilePhoto ? (
+                                        <img
+                                            src={provider.profilePhoto.startsWith('http') ? provider.profilePhoto : `${apiUrl}/${provider.profilePhoto}`}
+                                            alt={provider.businessName}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
+                                            <Building2 size={80} />
+                                        </div>
+                                    )}
+                                    <div className="absolute top-6 right-6 bg-white/95 backdrop-blur-md px-4 py-2 rounded-2xl flex items-center gap-2 shadow-xl border border-white/50">
+                                        <Star size={18} className="fill-amber-500 text-amber-500" />
+                                        <span className="text-lg font-black text-slate-900">{(provider.rating || 4.5).toFixed(1)}</span>
+                                    </div>
+                                    <div className="absolute bottom-6 left-6 flex gap-2">
+                                        <div className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl">
+                                            Verified Pro
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Content */}
+                                <div className="p-10 flex-1 flex flex-col">
+                                    <h2 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">
+                                        {provider.businessName}
+                                    </h2>
+                                    <div className="flex items-center gap-2 mb-6">
+                                        <MapPin size={16} className="text-slate-400" />
+                                        <p className="text-sm text-slate-500 font-bold">{provider.city}, {provider.area}</p>
+                                    </div>
+
+                                    <p className="text-slate-500 text-sm font-medium line-clamp-2 mb-8 leading-relaxed">
+                                        {provider.description || "Expert architectural firm specializing in complete home transformations and structural excellence."}
+                                    </p>
+
+                                    <div className="grid grid-cols-2 gap-4 mb-10">
+                                        <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
+                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-tighter mb-1">Experience</p>
+                                            <p className="text-lg font-black text-slate-900">{provider.experience}+ Years</p>
+                                        </div>
+                                        <div className="bg-slate-50 p-4 rounded-3xl border border-slate-100 group-hover:bg-blue-50 group-hover:border-blue-100 transition-colors">
+                                            <p className="text-[10px] font-black uppercase text-slate-400 tracking-tighter mb-1">Projects</p>
+                                            <p className="text-lg font-black text-slate-900">150+ Done</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-auto pt-8 border-t border-slate-50 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                                                <Briefcase size={20} />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Consultation</p>
+                                                <p className="text-sm font-bold text-slate-900">Available</p>
+                                            </div>
+                                        </div>
+                                        <Link
+                                            to="/full-house-renovation/request"
+                                            className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-blue-600 transition-all active:scale-95"
+                                        >
+                                            Hire Firm
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
-      </section>
-    </div>
-  );
+    );
 };
 
 export default FullHouseRenovation;

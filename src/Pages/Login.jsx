@@ -142,17 +142,17 @@ const LoginPage = () => {
                     </form>
 
                     {/* Divider */}
-                    <div className="relative my-8">
+                    {/* <div className="relative my-8">
                         <div className="absolute inset-0 flex items-center">
                             <div className="w-full border-t border-slate-200"></div>
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
                             <span className="bg-white px-4 text-slate-400 font-bold tracking-widest">Or continue with</span>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Social Logins */}
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* <div className="grid grid-cols-2 gap-4">
                         <button className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-slate-700 text-sm">
                             <Chrome className="h-5 w-5" />
                             Google
@@ -161,14 +161,14 @@ const LoginPage = () => {
                             <Facebook className="h-5 w-5" />
                             Facebook
                         </button>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Footer Link */}
                 <p className="text-center mt-8 text-slate-500 font-medium">
                     Don't have an account? {' '}
                     <Link to="/register" className="text-blue-600 font-bold hover:underline">
-                        Create one for free
+                        Create a account
                     </Link>
                 </p>
             </div>

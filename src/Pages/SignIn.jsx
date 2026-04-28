@@ -136,24 +136,24 @@ const RegisterPage = () => {
                     </form>
 
                     {/* Divider */}
-                    <div className="relative my-8">
+                    {/* <div className="relative my-8">
                         <div className="absolute inset-0 flex items-center">
                             <div className="w-full border-t border-slate-100"></div>
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
                             <span className="bg-white px-4 text-slate-400 font-bold tracking-widest">Or sign up with</span>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Social Grid */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* <div className="grid grid-cols-2 gap-3">
                         <button className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-slate-700 text-xs">
                             <Chrome className="h-4 w-4" /> Google
                         </button>
                         <button className="flex items-center justify-center gap-2 py-3 px-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors font-bold text-slate-700 text-xs">
                             <Facebook className="h-4 w-4 text-blue-600 fill-blue-600" /> Facebook
                         </button>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Terms & Footer */}
