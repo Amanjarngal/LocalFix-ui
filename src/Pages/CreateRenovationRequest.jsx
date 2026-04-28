@@ -1,362 +1,380 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { 
+    ArrowLeft, 
+    Home, 
+    Building2, 
+    Hammer, 
+    MapPin, 
+    DollarSign, 
+    Calendar, 
+    CheckCircle2, 
+    Sparkles, 
+    ShieldCheck, 
+    ArrowRight,
+    Plus,
+    X,
+    Clock,
+    Briefcase,
+    Zap,
+    ChevronRight,
+    Phone,
+    User
+} from 'lucide-react';
 import { createRenovationRequest } from '../services/renovationService';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const CreateRenovationRequest = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    projectTitle: '',
-    description: '',
-    estimatedBudget: '',
-    propertyType: '2BHK',
-    renovationType: 'complete',
-    projectScope: [],
-    address: '',
-    city: '',
-    area: '',
-    pincode: '',
-    contactName: '',
-    contactNumber: '',
-    preferredStartDate: '',
-    estimatedDuration: '2-3 weeks',
-  });
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [createdId, setCreatedId] = useState(null);
 
-  const projectScopeOptions = [
-    'painting', 'flooring', 'electrical', 'plumbing', 
-    'carpentry', 'masonry', 'tiling', 'doors-windows', 'other'
-  ];
+    const [formData, setFormData] = useState({
+        projectTitle: '',
+        description: '',
+        propertyType: 'Residential',
+        renovationType: 'Full-House',
+        estimatedBudget: '',
+        estimatedDuration: '3-6 Months',
+        preferredStartDate: '',
+        address: '',
+        city: '',
+        area: '',
+        pincode: '',
+        contactName: '',
+        contactNumber: '',
+        projectScope: []
+    });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+    const scopeOptions = [
+        'Structural', 'Electrical', 'Plumbing', 'Flooring', 
+        'Painting', 'Kitchen', 'Bathroom', 'Roofing', 
+        'HVAC', 'Interior Design', 'Landscaping'
+    ];
 
-  const handleScopeToggle = (scope) => {
-    setFormData(prev => ({
-      ...prev,
-      projectScope: prev.projectScope.includes(scope)
-        ? prev.projectScope.filter(s => s !== scope)
-        : [...prev.projectScope, scope]
-    }));
-  };
+    const handleScopeToggle = (option) => {
+        setFormData(prev => ({
+            ...prev,
+            projectScope: prev.projectScope.includes(option)
+                ? prev.projectScope.filter(item => item !== option)
+                : [...prev.projectScope, option]
+        }));
+    };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (formData.projectScope.length === 0) {
+            toast.error('Select at least one work discipline');
+            return;
+        }
 
-    // Validation
-    if (!formData.projectTitle || !formData.description || !formData.estimatedBudget ||
-        !formData.address || !formData.city || !formData.area || !formData.pincode) {
-      toast.error('Please fill all required fields');
-      return;
-    }
+        try {
+            setLoading(true);
+            const response = await createRenovationRequest(formData);
+            setCreatedId(response._id);
+            setSuccess(true);
+            toast.success('Project published successfully!');
+        } catch (error) {
+            toast.error(error.message || 'Failed to publish project');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    if (formData.projectScope.length === 0) {
-      toast.error('Please select at least one project scope');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const data = await createRenovationRequest(formData);
-      toast.success('Renovation request posted successfully!');
-      navigate(`/full-house-renovation/request/${data._id}`);
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error(error.message || 'Failed to create request');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 md:px-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-bold mb-4"
-          >
-            <ArrowLeft size={20} /> Back
-          </button>
-          <h1 className="text-4xl font-black text-slate-900 mb-2">Post Your Renovation Project</h1>
-          <p className="text-lg text-slate-600">
-            Get quotes from verified professionals in your area
-          </p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 md:p-12">
-          {/* Section 1: Project Basics */}
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-4 border-b border-slate-200">
-              Project Details
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Project Title *</label>
-                <input
-                  type="text"
-                  name="projectTitle"
-                  value={formData.projectTitle}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Complete Home Renovation"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Property Type *</label>
-                <select
-                  name="propertyType"
-                  value={formData.propertyType}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    if (success) {
+        return (
+            <div className="min-h-screen bg-white flex items-center justify-center p-6">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="max-w-2xl w-full text-center"
                 >
-                  <option value="1BHK">1 BHK</option>
-                  <option value="2BHK">2 BHK</option>
-                  <option value="3BHK">3 BHK</option>
-                  <option value="4BHK">4 BHK</option>
-                  <option value="5BHK">5 BHK</option>
-                  <option value="Commercial">Commercial</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
+                    <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-10 border border-blue-100 shadow-xl shadow-blue-600/10">
+                        <CheckCircle2 size={48} className="text-blue-600" />
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none">
+                        Project <span className="text-blue-600">Published.</span>
+                    </h1>
+                    <p className="text-xl text-slate-500 font-medium mb-12 leading-relaxed">
+                        Your renovation request is now live. Certified experts will begin reviewing your scope and submitting quotes shortly.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Link
+                            to={`/full-house-renovation/request/${createdId}`}
+                            className="px-10 py-5 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-3"
+                        >
+                            View Project Detail <ChevronRight size={20} />
+                        </Link>
+                        <Link
+                            to="/full-house-renovation/my-requests"
+                            className="px-10 py-5 bg-white border border-slate-200 text-slate-900 font-black rounded-2xl hover:bg-slate-50 transition-all"
+                        >
+                            Go to Dashboard
+                        </Link>
+                    </div>
+                </motion.div>
             </div>
+        );
+    }
 
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-slate-700 mb-2">Description *</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Describe your renovation project in detail..."
-                rows="4"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Renovation Type *</label>
-                <select
-                  name="renovationType"
-                  value={formData.renovationType}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="complete">Complete Renovation</option>
-                  <option value="partial">Partial Renovation</option>
-                  <option value="modular">Modular Furniture</option>
-                  <option value="kitchen">Kitchen Only</option>
-                  <option value="bathroom">Bathroom Only</option>
-                  <option value="bedroom">Bedroom Only</option>
-                  <option value="living-room">Living Room Only</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Estimated Budget *</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-3 text-xl text-slate-600">₹</span>
-                  <input
-                    type="number"
-                    name="estimatedBudget"
-                    value={formData.estimatedBudget}
-                    onChange={handleInputChange}
-                    placeholder="Enter budget in rupees"
-                    className="w-full pl-8 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
+    return (
+        <div className="min-h-screen bg-white pb-24">
+            {/* Simple Light Header */}
+            <div className="bg-slate-50 border-b border-slate-100 pt-32 pb-24 px-6 md:px-12 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-50 rounded-full blur-[100px] opacity-60 -mr-32 -mt-32" />
+                <div className="max-w-6xl mx-auto relative z-10">
+                    <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold mb-10 transition-colors">
+                        <ArrowLeft size={18} /> Back
+                    </button>
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                        <div className="max-w-3xl">
+                            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-blue-100">
+                                <Zap size={14} /> Design Your Transformation
+                            </motion.div>
+                            <h1 className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tighter leading-none">
+                                Create <span className="text-blue-600">Request.</span>
+                            </h1>
+                            <p className="text-lg text-slate-500 font-medium leading-relaxed">
+                                Share your vision with our certified architectural network.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 2: Project Scope */}
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-4 border-b border-slate-200">
-              Project Scope *
-            </h2>
-            <p className="text-sm text-slate-600 mb-4">Select all that apply:</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {projectScopeOptions.map(scope => (
-                <button
-                  key={scope}
-                  type="button"
-                  onClick={() => handleScopeToggle(scope)}
-                  className={`px-4 py-2.5 rounded-lg font-semibold transition text-sm ${
-                    formData.projectScope.includes(scope)
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
-                  }`}
-                >
-                  {scope.charAt(0).toUpperCase() + scope.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Section 3: Location */}
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-4 border-b border-slate-200">
-              Location
-            </h2>
-
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-slate-700 mb-2">Address *</label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                placeholder="Enter full address"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">City *</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  placeholder="Enter city"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
+            <div className="max-w-6xl mx-auto px-6 py-16">
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+                    
+                    {/* Form Left Side */}
+                    <div className="lg:col-span-2 space-y-16">
+                        {/* Section: Project Vision */}
+                        <section>
+                            <div className="flex items-center gap-3 mb-10">
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
+                                    <Sparkles size={20} />
+                                </div>
+                                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Project Vision</h2>
+                            </div>
 
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Area *</label>
-                <input
-                  type="text"
-                  name="area"
-                  value={formData.area}
-                  onChange={handleInputChange}
-                  placeholder="Enter area/locality"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
+                            <div className="space-y-8">
+                                <div className="group">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Project Title *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={formData.projectTitle}
+                                        onChange={(e) => setFormData({ ...formData, projectTitle: e.target.value })}
+                                        placeholder="e.g. Modern Minimalist Penthouse Renovation"
+                                        className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-2xl outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300"
+                                    />
+                                </div>
 
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Pincode *</label>
-                <input
-                  type="text"
-                  name="pincode"
-                  value={formData.pincode}
-                  onChange={handleInputChange}
-                  placeholder="Enter pincode"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
+                                <div className="group">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Project Brief *</label>
+                                    <textarea
+                                        required
+                                        rows="4"
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        placeholder="Describe your design goals, material preferences, and structural requirements..."
+                                        className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-2xl outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300 resize-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Property Configuration</label>
+                                        <select
+                                            value={formData.propertyType}
+                                            onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
+                                            className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-2xl outline-none font-bold text-slate-900 transition-all appearance-none"
+                                        >
+                                            <option>Residential</option>
+                                            <option>Commercial</option>
+                                            <option>Villa/Bungalow</option>
+                                            <option>Apartment</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Estimated Investment *</label>
+                                        <div className="relative">
+                                            <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 font-black">₹</div>
+                                            <input
+                                                required
+                                                type="number"
+                                                value={formData.estimatedBudget}
+                                                onChange={(e) => setFormData({ ...formData, estimatedBudget: e.target.value })}
+                                                placeholder="Amount"
+                                                className="w-full pl-12 pr-6 py-5 bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-2xl outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Section: Disciplines */}
+                        <section>
+                            <div className="flex items-center gap-3 mb-10">
+                                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-100">
+                                    <Hammer size={20} />
+                                </div>
+                                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Work Disciplines</h2>
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                                {scopeOptions.map((option) => (
+                                    <button
+                                        key={option}
+                                        type="button"
+                                        onClick={() => handleScopeToggle(option)}
+                                        className={`px-6 py-3 rounded-xl font-bold text-sm transition-all border-2 ${
+                                            formData.projectScope.includes(option)
+                                                ? 'bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10'
+                                                : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* Section: Logistics */}
+                        <section>
+                            <div className="flex items-center gap-3 mb-10">
+                                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-600 border border-red-100">
+                                    <MapPin size={20} />
+                                </div>
+                                <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">Site Logistics</h2>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="md:col-span-2">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Site Address *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={formData.address}
+                                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                        placeholder="Full address of the renovation site"
+                                        className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-2xl outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">City *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={formData.city}
+                                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                        className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-2xl outline-none font-bold text-slate-900 transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Locality / Area *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={formData.area}
+                                        onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                                        className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-2xl outline-none font-bold text-slate-900 transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Pincode *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={formData.pincode}
+                                        onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
+                                        className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent focus:border-blue-500 focus:bg-white rounded-2xl outline-none font-bold text-slate-900 transition-all"
+                                    />
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    {/* Sidebar: Details & Submit */}
+                    <aside className="space-y-8">
+                        <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 sticky top-32">
+                            <div className="flex items-center gap-3 mb-10">
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
+                                    <Clock size={20} />
+                                </div>
+                                <h3 className="text-xl font-black text-slate-900 uppercase">Schedule</h3>
+                            </div>
+                            
+                            <div className="space-y-8 mb-10">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Ideal Start Date *</label>
+                                    <input
+                                        required
+                                        type="date"
+                                        value={formData.preferredStartDate}
+                                        onChange={(e) => setFormData({ ...formData, preferredStartDate: e.target.value })}
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-slate-900 focus:border-blue-500 transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Project Duration</label>
+                                    <select
+                                        value={formData.estimatedDuration}
+                                        onChange={(e) => setFormData({ ...formData, estimatedDuration: e.target.value })}
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-slate-900 focus:border-blue-500 transition-all appearance-none"
+                                    >
+                                        <option>1-3 Months</option>
+                                        <option>3-6 Months</option>
+                                        <option>6-12 Months</option>
+                                        <option>12+ Months</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-6 pt-10 border-t border-slate-200">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 border border-green-100">
+                                        <User size={20} />
+                                    </div>
+                                    <h3 className="text-xl font-black text-slate-900 uppercase">Contact</h3>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Contact Person *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={formData.contactName}
+                                        onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-slate-900"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Mobile Number *</label>
+                                    <input
+                                        required
+                                        type="tel"
+                                        value={formData.contactNumber}
+                                        onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
+                                        className="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none font-bold text-slate-900"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full mt-10 py-6 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-black rounded-2xl transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-3 group active:scale-95"
+                            >
+                                {loading ? 'Publishing...' : (
+                                    <>Publish Project <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" /></>
+                                )}
+                            </button>
+                        </div>
+                    </aside>
+                </form>
             </div>
-          </div>
-
-          {/* Section 4: Timeline */}
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-4 border-b border-slate-200">
-              Timeline
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Preferred Start Date</label>
-                <input
-                  type="date"
-                  name="preferredStartDate"
-                  value={formData.preferredStartDate}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Estimated Duration</label>
-                <select
-                  name="estimatedDuration"
-                  value={formData.estimatedDuration}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="1-2 weeks">1-2 weeks</option>
-                  <option value="2-3 weeks">2-3 weeks</option>
-                  <option value="1 month">1 month</option>
-                  <option value="2-3 months">2-3 months</option>
-                  <option value="3-6 months">3-6 months</option>
-                  <option value="6+ months">6+ months</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 5: Contact Info */}
-          <div className="mb-10">
-            <h2 className="text-2xl font-bold text-slate-900 mb-6 pb-4 border-b border-slate-200">
-              Contact Information
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Contact Name</label>
-                <input
-                  type="text"
-                  name="contactName"
-                  value={formData.contactName}
-                  onChange={handleInputChange}
-                  placeholder="Your name"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Contact Number</label>
-                <input
-                  type="tel"
-                  name="contactNumber"
-                  value={formData.contactNumber}
-                  onChange={handleInputChange}
-                  placeholder="Your phone number"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex gap-4">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="px-8 py-3.5 border-2 border-slate-300 text-slate-900 font-bold rounded-lg hover:bg-slate-50 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-8 py-3.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-bold rounded-lg transition flex items-center justify-center gap-2"
-            >
-              {loading ? 'Posting...' : 'Post Your Project'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+        </div>
+    );
 };
 
 export default CreateRenovationRequest;

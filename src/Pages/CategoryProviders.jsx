@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import {
     MapPin,
     Star,
@@ -12,11 +13,15 @@ import {
     ShieldCheck,
     Briefcase,
     Loader2,
-    SearchX
+    SearchX,
+    Plus,
+    ArrowLeft
 } from 'lucide-react';
 
 const CategoryProviders = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
     const [providers, setProviders] = useState([]);
     const [category, setCategory] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -28,6 +33,25 @@ const CategoryProviders = () => {
     const [reviewedProvider, setReviewedProvider] = useState(null);
 
     const apiUrl = import.meta.env.VITE_API_URL;
+
+    const handleSearch = useCallback(async (searchPin = pincode, isAuto = false) => {
+        if (!searchPin || searchPin.length !== 6) return;
+        setSearching(true);
+        try {
+            const res = await axios.get(`${apiUrl}/api/providers/search?serviceId=${id}&pincode=${searchPin}`);
+            setProviders(res.data.data);
+            if (res.data.data.length > 0) {
+                toast.success(`Showing experts in ${searchPin}`, { id: 'search-toast' });
+            } else {
+                toast.error(`No experts found in ${searchPin}`, { id: 'search-toast' });
+            }
+        } catch (err) {
+            console.error("Search failed", err);
+            toast.error("Failed to fetch location-based results");
+        } finally {
+            setSearching(false);
+        }
+    }, [id, apiUrl, pincode]);
 
     const fetchReviews = async (provider) => {
         setReviewedProvider(provider);
@@ -46,15 +70,40 @@ const CategoryProviders = () => {
     // Fetch initial providers and category info
     useEffect(() => {
         const fetchData = async () => {
+            const params = new URLSearchParams(location.search);
+            const urlPin = params.get('pincode');
+            if (urlPin) setPincode(urlPin);
+
+            const cachedCats = sessionStorage.getItem('cachedServices');
+            if (cachedCats) {
+                const parsedCats = JSON.parse(cachedCats);
+                setCategory(parsedCats.find(c => c._id === id));
+            }
+            
+            // If no pincode in URL, try loading from cache
+            if (!urlPin) {
+                const cachedProvs = sessionStorage.getItem(`cachedProviders_${id}`);
+                if (cachedProvs) {
+                    setProviders(JSON.parse(cachedProvs));
+                    setLoading(false);
+                }
+            }
+
             try {
                 // Get Category Details
                 const catRes = await axios.get(`${apiUrl}/api/services`);
-                const foundCat = catRes.data.data.find(c => c._id === id);
-                setCategory(foundCat);
+                const allCats = catRes.data.data;
+                sessionStorage.setItem('cachedServices', JSON.stringify(allCats));
+                setCategory(allCats.find(c => c._id === id));
 
                 // Get Providers for this category
-                const provRes = await axios.get(`${apiUrl}/api/providers/search?serviceId=${id}`);
-                setProviders(provRes.data.data);
+                if (urlPin && urlPin.length === 6) {
+                    await handleSearch(urlPin, true);
+                } else {
+                    const provRes = await axios.get(`${apiUrl}/api/providers/search?serviceId=${id}`);
+                    setProviders(provRes.data.data);
+                    sessionStorage.setItem(`cachedProviders_${id}`, JSON.stringify(provRes.data.data));
+                }
             } catch (err) {
                 console.error("Failed to load providers", err);
             } finally {
@@ -62,61 +111,79 @@ const CategoryProviders = () => {
             }
         };
         fetchData();
-    }, [id, apiUrl]);
-
-    const handleSearch = async () => {
-        if (!pincode || pincode.length !== 6) return;
-        setSearching(true);
-        try {
-            const res = await axios.get(`${apiUrl}/api/providers/search?serviceId=${id}&pincode=${pincode}`);
-            setProviders(res.data.data);
-        } catch (err) {
-            console.error("Search failed", err);
-        } finally {
-            setSearching(false);
-        }
-    };
+    }, [id, apiUrl, location.search, handleSearch]);
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
-            {/* Header / Search Section */}
-            <div className="bg-white border-b border-slate-100 shadow-sm sticky top-16 z-30">
-                <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div>
-                        <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest mb-1">
-                            <Briefcase size={14} /> Available Experts
-                        </div>
-                        <h1 className="text-3xl font-black text-slate-900">
-                            {category?.name || "Service"} <span className="text-blue-600">Experts</span>
-                        </h1>
-                        <p className="text-sm text-slate-500 font-medium">Top rated professionals in your vicinity</p>
-                    </div>
+            {/* Premium Hero Section */}
+            <div className="relative bg-[#0A0F1C] pt-24 pb-32 overflow-hidden border-b border-slate-200">
+                {/* Background Details */}
+                <div className="absolute inset-0 z-0">
+                    {category?.image && (
+                        <>
+                            <img src={category.image} alt="bg" className="w-full h-full object-cover opacity-20 object-center" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0F1C] to-transparent" />
+                        </>
+                    )}
+                    <div className="absolute top-0 right-0 -mr-32 -mt-32 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 -ml-32 -mb-32 w-[500px] h-[500px] bg-cyan-600/20 rounded-full blur-[120px] pointer-events-none" />
+                </div>
 
-                    <div className="relative flex-1 max-w-md w-full">
-                        <div className="flex items-center bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-100 transition-all">
-                            <div className="pl-4 text-slate-400">
-                                <MapPin size={20} />
+                <div className="max-w-7xl mx-auto px-6 relative z-10">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 font-bold hover:bg-white/10 hover:text-white transition-all backdrop-blur-md cursor-pointer"
+                    >
+                        <ArrowLeft size={18} />
+                        Back
+                    </button>
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-12">
+                        {/* Text Content */}
+                        <div className="flex-1 text-center md:text-left">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 font-bold text-xs uppercase tracking-widest mb-6 backdrop-blur-sm">
+                                <Briefcase size={14} /> Available Experts
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Enter your 6-digit Pincode"
-                                className="w-full bg-transparent px-4 py-3.5 font-bold text-slate-900 focus:outline-none placeholder:text-slate-400"
-                                value={pincode}
-                                maxLength={6}
-                                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                            />
+                            <h1 className="text-5xl md:text-7xl font-black text-white leading-tight tracking-tight mb-6">
+                                {category?.name || "Service"} <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Experts</span>
+                            </h1>
+                            <p className="text-lg text-slate-300 font-medium max-w-xl mx-auto md:mx-0">
+                                Discover top-rated, background-verified professionals in your area. Enter your pincode to check real-time availability.
+                            </p>
+                        </div>
+
+                        {/* Search Card */}
+                        <div className="w-full max-w-md bg-white rounded-[2rem] p-8 shadow-2xl relative">
+                            <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full blur-2xl opacity-50 pointer-events-none" />
+                            <h3 className="text-xl font-black text-slate-900 mb-2">Check Availability</h3>
+                            <p className="text-sm text-slate-500 font-medium mb-6">We'll find the best pros nearby</p>
+                            
+                            <div className="relative mb-6">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-blue-500">
+                                    <MapPin size={22} />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Enter 6-digit Pincode"
+                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-12 pr-4 font-bold text-slate-900 text-lg focus:outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner"
+                                    value={pincode}
+                                    maxLength={6}
+                                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                />
+                                {pincode.length > 0 && pincode.length < 6 && (
+                                    <span className="absolute -bottom-6 left-2 text-xs font-bold text-amber-500">Please enter exactly 6 digits</span>
+                                )}
+                            </div>
+
                             <button
-                                onClick={handleSearch}
+                                onClick={() => handleSearch()}
                                 disabled={searching || pincode.length !== 6}
-                                className="bg-blue-600 text-white px-6 py-3.5 font-black hover:bg-blue-700 transition flex items-center gap-2 disabled:bg-slate-300"
+                                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-black py-4 rounded-xl transition-colors shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 text-lg disabled:shadow-none"
                             >
-                                {searching ? <Loader2 className="animate-spin" size={20} /> : "Search"}
+                                {searching ? <Loader2 className="animate-spin" size={24} /> : "Find Experts"}
+                                {!searching && <ArrowRight size={20} />}
                             </button>
                         </div>
-                        {pincode.length > 0 && pincode.length < 6 && (
-                            <p className="absolute top-full left-0 mt-1 text-[10px] font-bold text-blue-500 animate-pulse">Enter 6 digits...</p>
-                        )}
                     </div>
                 </div>
             </div>
@@ -139,7 +206,7 @@ const CategoryProviders = () => {
                             We don't have any experts in <span className="text-blue-600 font-bold">"{pincode || 'this area'}"</span> yet. Try another pincode or check back later!
                         </p>
                         <button
-                            onClick={() => { setPincode(''); fetchData(); }}
+                            onClick={() => { setPincode(''); navigate(`/services/${id}`); }}
                             className="mt-8 px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition"
                         >
                             Show All Experts

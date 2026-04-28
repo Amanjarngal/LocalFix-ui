@@ -14,7 +14,8 @@ import {
     Calendar,
     Settings,
     Wallet,
-    Activity
+    Activity,
+    AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -31,6 +32,7 @@ const Sidebar = () => {
         { title: 'Users', icon: Users, path: '/admin/users' },
         { title: 'Provider Applications', icon: ClipboardList, path: '/admin/applications' },
         { title: 'Availability Monitor', icon: Activity, path: '/admin/availability' },
+        { title: 'User Complaints', icon: AlertTriangle, path: '/admin/complaints' },
         { title: 'Payouts', icon: Wallet, path: '/admin/payouts' },
         { title: 'Platform Settings', icon: Settings, path: '/admin/settings' },
     ];

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Hammer, Mail, Lock, User, Eye, EyeOff, ArrowRight, Chrome, Facebook, Loader2, CheckCircle2 } from 'lucide-react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 
 const RegisterPage = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -12,7 +11,6 @@ const RegisterPage = () => {
     const [error, setError] = useState('');
 
     const navigate = useNavigate();
-    const { login } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -26,17 +24,9 @@ const RegisterPage = () => {
 
             if (response.data.success) {
                 setSuccess(true);
-                login(response.data.data);
-
+                // Do not auto-login, navigate to login page
                 setTimeout(() => {
-                    const role = response.data.data.role;
-                    if (role === 'admin') {
-                        navigate('/admin/dashboard');
-                    } else if (role === 'serviceProvider') {
-                        navigate('/provider/dashboard');
-                    } else {
-                        navigate('/');
-                    }
+                    navigate('/login');
                 }, 1500);
             }
         } catch (err) {

@@ -41,7 +41,10 @@ import BookingsManagement from "./Pages/Admin/BookingsManagement";
 import AdminSettings from "./Pages/Admin/AdminSettings";
 import AdminPayouts from "./Pages/Admin/AdminPayouts";
 import AdminAvailabilityManager from "./Pages/Admin/AdminAvailabilityManager";
+import AdminComplaints from "./Pages/Admin/AdminComplaints";
 import { ServicePage } from "./Pages/ServicePage";
+import Chatbot from "./components/Chatbot";
+import ContactPage from "./Pages/Contact";
 
 function AppContent() {
   const location = useLocation();
@@ -54,7 +57,7 @@ function AppContent() {
       <main className={!hideNavFooter ? "pt-16 md:pt-20" : ""}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/services" element={<Services />} />
+          <Route path="/services" element={<ServicePage />} />
           <Route path="/services/:id" element={<CategoryProviders />} />
           <Route path="/services/:id/pricing/:providerId" element={<ServicePricing />} />
           <Route path="/cart" element={<Cart />} />
@@ -71,6 +74,7 @@ function AppContent() {
           </Route>
 
           <Route path="/provider-enrollment" element={<ProviderEnrollment />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/About" element={<About />} />
           <Route path="/change-password" element={<ChangePassword />} />
 
@@ -101,11 +105,13 @@ function AppContent() {
               <Route path="settings" element={<AdminSettings />} />
               <Route path="payouts" element={<AdminPayouts />} />
               <Route path="availability" element={<AdminAvailabilityManager />} />
+              <Route path="complaints" element={<AdminComplaints />} />
             </Route>
           </Route>
         </Routes>
       </main>
       {!hideNavFooter && <Footer />}
+      <Chatbot />
     </>
   );
 }

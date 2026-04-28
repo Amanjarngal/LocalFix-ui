@@ -1,22 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import {
-    Wrench, ArrowRight, ChevronRight, Star,
-    Sparkles, ShieldCheck, Zap, Heart
+    Wrench, Star, Heart, ArrowRight, Search
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const Services = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState('');
+    const [urlPincode, setUrlPincode] = useState('');
     const apiUrl = import.meta.env.VITE_API_URL;
+
+    // Handle URL parameters on initial load
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const search = params.get('search');
+        const pin = params.get('pincode');
+        
+        if (search) setSearchQuery(search);
+        if (pin) {
+            setUrlPincode(pin);
+            toast.success(`Location set to ${pin}`, { id: 'pincode-set' });
+        }
+
+        // Directly go to services section if we are searching/pincoding
+        if (search || pin) {
+            setTimeout(() => {
+                const element = document.getElementById('categories-section');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        }
+    }, [location.search]);
 
     useEffect(() => {
         const fetchServices = async () => {
+            const cached = sessionStorage.getItem('cachedServices');
+            if (cached) {
+                setServices(JSON.parse(cached));
+                setLoading(false);
+            }
             try {
                 const res = await axios.get(`${apiUrl}/api/services`);
                 setServices(res.data.data);
+                sessionStorage.setItem('cachedServices', JSON.stringify(res.data.data));
             } catch (error) {
                 console.error("Failed to load services");
             } finally {
@@ -26,109 +59,187 @@ const Services = () => {
         fetchServices();
     }, [apiUrl]);
 
+    const filteredServices = services.filter(service =>
+        service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const handleServiceClick = (serviceId) => {
+        // If we have a pincode from the URL, pass it to the next page
+        const path = `/services/${serviceId}${urlPincode ? `?pincode=${urlPincode}` : ''}`;
+        navigate(path);
+    };
+
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.08 }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 30, scale: 0.95 },
+        show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
+    };
+
     return (
-        <div className="min-h-screen bg-[#F8FAFC]">
-            {/* Premium Hero Section for Categories */}
-            <div className="bg-white border-b border-slate-100 overflow-hidden relative">
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-50" />
-                <div className="max-w-7xl mx-auto px-6 py-20 relative z-10">
-                    <div className="flex items-center gap-2 text-blue-600 font-black text-xs uppercase tracking-[0.2em] mb-4">
-                        <Sparkles size={16} /> Over 50+ Services Available
-                    </div>
-                    <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tight leading-[1.1]">
-                        What do you need <br />
-                        <span className="text-blue-600">help with today?</span>
-                    </h1>
-                    <p className="text-slate-500 mt-8 max-w-2xl text-xl font-medium leading-relaxed">
-                        Select a category to find top-rated professionals near you. We ensure reliable, background-checked experts for all your home needs.
-                    </p>
-
-                    <div className="mt-12 flex flex-wrap gap-8">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-green-50 text-green-600 rounded-full flex items-center justify-center border border-green-100">
-                                <ShieldCheck size={20} />
-                            </div>
-                            <span className="text-sm font-black text-slate-700 uppercase tracking-wider">Verified Pros</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center border border-amber-100">
-                                <Zap size={20} />
-                            </div>
-                            <span className="text-sm font-black text-slate-700 uppercase tracking-wider">Instant Booking</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+        <div className="min-h-screen bg-white" id="categories-section">
             {/* Services Grid */}
-            <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
-                <div className="flex items-center justify-between mb-12">
-                    <h2 className="text-2xl font-black text-slate-900">Explore All <span className="text-blue-600">Categories</span></h2>
-                    <div className="h-px flex-1 mx-8 bg-slate-100" />
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
+                {/* Header Row */}
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
+                    <div>
+                        <h2 className="text-3xl md:text-4xl font-black text-slate-900">
+                            Explore All <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Categories</span>
+                        </h2>
+                        {urlPincode && (
+                            <p className="text-blue-600 mt-1 text-sm font-bold flex items-center gap-1">
+                                <Search size={14} /> Showing results for pincode: {urlPincode}
+                            </p>
+                        )}
+                        <p className="text-slate-500 mt-2 text-sm font-medium">
+                            {services.length} professional services available
+                        </p>
+                    </div>
+                    {/* Search Bar */}
+                    <div className="relative w-full md:w-80">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search services..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                        />
+                    </div>
                 </div>
 
                 {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3, 4, 5, 6].map((n) => (
-                            <div key={n} className="h-80 bg-white rounded-[3rem] border border-slate-100 animate-pulse shadow-sm" />
+                            <div key={n} className="h-[380px] bg-slate-100 rounded-3xl border border-slate-200 animate-pulse" />
                         ))}
                     </div>
+                ) : filteredServices.length === 0 ? (
+                    <div className="text-center py-24">
+                        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
+                            <Search className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">No services found</h3>
+                        <p className="text-slate-500 text-sm">Try adjusting your search query</p>
+                    </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                        {services.map((service) => (
-                            <div
+                    <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true, margin: "-50px" }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    >
+                        {filteredServices.map((service) => (
+                            <motion.div
+                                variants={itemVariants}
                                 key={service._id}
-                                onClick={() => navigate(`/services/${service._id}`)}
-                                className="group relative bg-white rounded-[3rem] p-10 border border-slate-100 hover:border-blue-500 transition-all duration-500 cursor-pointer shadow-sm hover:shadow-2xl hover:shadow-blue-200/20 active:scale-[0.98]"
+                                onClick={() => handleServiceClick(service._id)}
+                                className="group relative bg-white rounded-3xl border border-slate-100 hover:border-blue-200 transition-all duration-500 cursor-pointer shadow-sm hover:shadow-[0_20px_60px_-15px_rgba(37,99,235,0.15)] overflow-hidden"
                             >
-                                <div className="flex justify-between items-start mb-10">
-                                    <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-700 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 shadow-sm border border-slate-100">
-                                        <Wrench className="w-10 h-10" />
-                                    </div>
-                                    <div className="flex items-center gap-1.5 text-amber-500 font-black text-xs bg-amber-50 px-4 py-2 rounded-full border border-amber-100">
+                                {/* Service Image */}
+                                <div className="relative h-48 overflow-hidden">
+                                    {service.image ? (
+                                        <>
+                                            <img
+                                                src={service.image}
+                                                alt={service.name}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                                            />
+                                            {/* Gradient Overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
+                                        </>
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-blue-50 via-slate-50 to-cyan-50 flex items-center justify-center">
+                                            <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center text-blue-500 border border-slate-200 shadow-sm group-hover:scale-110 transition-transform duration-500">
+                                                <Wrench className="w-10 h-10" />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Rating Badge */}
+                                    <div className="absolute top-4 right-4 flex items-center gap-1.5 text-amber-500 font-black text-xs bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-amber-200 shadow-sm">
                                         <Star className="w-3.5 h-3.5 fill-current" /> 4.9
                                     </div>
                                 </div>
 
-                                <h3 className="text-3xl font-black text-slate-900 mb-4 group-hover:text-blue-600 transition-colors leading-tight">
-                                    {service.name}
-                                </h3>
-                                <p className="text-slate-500 mb-10 line-clamp-2 text-base font-medium leading-relaxed group-hover:text-slate-600 transition-colors">
-                                    {service.description}
-                                </p>
+                                {/* Card Content */}
+                                <div className="p-6 pt-4">
+                                    <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-blue-600 transition-colors leading-tight">
+                                        {service.name}
+                                    </h3>
+                                    <p className="text-slate-500 mb-6 line-clamp-2 text-sm font-medium leading-relaxed group-hover:text-slate-600 transition-colors">
+                                        {service.description}
+                                    </p>
 
-                                <div className="flex items-center justify-between pt-8 border-t border-slate-50">
-                                    <span className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] group-hover:text-blue-500 transition-colors">Find Experts</span>
-                                    <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center group-hover:bg-blue-600 group-hover:translate-x-2 transition-all duration-300 shadow-xl">
-                                        <ChevronRight className="w-6 h-6" />
+                                    <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-[0.15em] group-hover:text-blue-600 transition-colors">
+                                            Find Experts
+                                        </span>
+                                        <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white group-hover:-rotate-45 transition-all duration-300 border border-slate-200 group-hover:border-transparent">
+                                            <ArrowRight className="w-4 h-4" />
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Hover Glow */}
-                                <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/5 rounded-[3rem] transition-colors pointer-events-none" />
-                            </div>
+                            </motion.div>
                         ))}
-                    </div>
+                    </motion.div>
                 )}
             </div>
 
             {/* Bottom Trust Section */}
-            <div className="bg-slate-900 text-white py-24 overflow-hidden relative">
-                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
+            <div className="bg-gradient-to-b from-slate-50 to-white border-t border-slate-100 py-24 overflow-hidden relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl h-96 bg-blue-100/50 rounded-full blur-[120px] pointer-events-none" />
                 <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-                    <Heart className="mx-auto text-blue-500 mb-8 w-12 h-12" />
-                    <h2 className="text-4xl md:text-5xl font-black mb-8 leading-tight">Join millions who trust LocalFix for their home repairs.</h2>
-                    <p className="text-slate-400 text-lg mb-12 font-medium">From leaky faucets to full home renovations, we've got the experts you need to get the job done right.</p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <div className="bg-white/10 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/10">
-                            <p className="text-3xl font-black text-blue-400">5k+</p>
-                            <p className="text-xs font-bold uppercase tracking-widest text-white/40">Verified Experts</p>
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        whileInView={{ scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                    >
+                        <Heart className="mx-auto text-blue-500 mb-8 w-14 h-14" />
+                    </motion.div>
+                    <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="text-4xl md:text-5xl font-black text-slate-900 mb-6 leading-tight tracking-tight"
+                    >
+                        Join millions who trust LocalFix <br className="hidden md:block" /> for their home repairs.
+                    </motion.h2>
+                    <motion.p
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-slate-500 text-lg mb-12 font-medium max-w-2xl mx-auto"
+                    >
+                        From leaky faucets to full home renovations, we've got the elite experts you need to get the job done efficiently and correctly.
+                    </motion.p>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                        className="flex flex-col sm:flex-row gap-6 justify-center"
+                    >
+                        <div className="bg-white px-10 py-6 rounded-3xl border border-slate-200 hover:border-blue-300 transition-colors shadow-lg">
+                            <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500 mb-1">5k+</p>
+                            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Verified Experts</p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-md px-8 py-4 rounded-3xl border border-white/10">
-                            <p className="text-3xl font-black text-green-400">100k+</p>
-                            <p className="text-xs font-bold uppercase tracking-widest text-white/40">Happy Customers</p>
+                        <div className="bg-white px-10 py-6 rounded-3xl border border-slate-200 hover:border-emerald-300 transition-colors shadow-lg">
+                            <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-400 mb-1">100k+</p>
+                            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Happy Customers</p>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </div>
@@ -136,5 +247,3 @@ const Services = () => {
 };
 
 export default Services;
-
-

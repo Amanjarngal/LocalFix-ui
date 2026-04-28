@@ -40,8 +40,8 @@ export const LocalFixAbout = () => {
         <section ref={containerRef} className="bg-slate-50 py-24 md:py-32 relative overflow-hidden">
             {/* Background elements */}
             <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-            
-            <motion.div 
+
+            <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
@@ -52,7 +52,7 @@ export const LocalFixAbout = () => {
                     {/* Left Side: Elaborate Image Composition */}
                     <motion.div variants={itemVariants} className="relative order-2 lg:order-1">
                         {/* Floating Experience Badge */}
-                        <motion.div 
+                        <motion.div
                             animate={{ y: [-10, 10, -10] }}
                             transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                             className="absolute -top-8 -left-8 z-20 bg-blue-600 text-white p-6 rounded-3xl shadow-xl shadow-blue-600/30 border-4 border-white"
@@ -133,17 +133,17 @@ export const LocalFixAbout = () => {
                             ))}
                         </motion.div>
 
-                        <motion.div variants={itemVariants} className="pt-6">
+                        {/* <motion.div variants={itemVariants} className="pt-6">
                             <button className="bg-slate-900 flex items-center gap-4 hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-600/30 transition-all duration-300 text-white font-black py-4 px-8 rounded-2xl text-sm uppercase tracking-widest group">
                                 Standard Excellence
                                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                             </button>
-                        </motion.div>
+                        </motion.div> */}
                     </div>
                 </div>
 
                 {/* Bottom Stats Section */}
-                <motion.div 
+                <motion.div
                     variants={itemVariants}
                     className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-40 max-w-5xl mx-auto"
                 >
