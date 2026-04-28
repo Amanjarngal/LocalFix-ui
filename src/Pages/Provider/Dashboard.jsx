@@ -133,7 +133,8 @@ const Dashboard = () => {
                                         </div>
                                         <div>
                                             <p className="font-bold text-slate-900">{booking.contactName || booking.customer?.name}</p>
-                                            <p className="text-xs text-slate-500">{new Date(booking.scheduledDate).toLocaleDateString()} at {booking.startTime}</p>
+                                            <p className="text-[9px] font-mono text-slate-400">ID: {booking._id}</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">{new Date(booking.scheduledDate).toLocaleDateString()} at {booking.startTime}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">

@@ -189,7 +189,7 @@ const Orders = () => {
                         <div className="sticky top-0 bg-white/80 backdrop-blur-md p-6 border-b border-slate-100 flex items-center justify-between z-10">
                             <div>
                                 <h3 className="text-xl font-black text-slate-900">Order Details</h3>
-                                <p className="text-sm font-medium text-slate-500">#{selectedOrder._id.slice(-8).toUpperCase()}</p>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">ID: <span className="font-mono text-slate-900">{selectedOrder._id}</span></p>
                             </div>
                             <button onClick={() => setSelectedOrder(null)} className="p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 rounded-xl transition">
                                 <X size={24} />

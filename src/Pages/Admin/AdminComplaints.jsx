@@ -100,9 +100,9 @@ const AdminComplaints = () => {
 
     const stats = {
         total: complaints.length,
-        pending: complaints.filter(c => c.status === 'pending').length,
-        inProgress: complaints.filter(c => c.status === 'in-progress').length,
-        resolved: complaints.filter(c => c.status === 'resolved').length,
+        pending: complaints.filter(c => c?.status === 'pending').length,
+        inProgress: complaints.filter(c => c?.status === 'in-progress').length,
+        resolved: complaints.filter(c => c?.status === 'resolved').length,
     };
 
     if (loading) {
@@ -190,8 +190,8 @@ const AdminComplaints = () => {
                         <tbody className="divide-y divide-gray-100">
                             {filtered.length > 0 ? (
                                 filtered.map((complaint) => {
-                                    const catMeta = CATEGORY_META[complaint.aiCategory] || CATEGORY_META.other;
-                                    const statusMeta = STATUS_META[complaint.status] || STATUS_META.pending;
+                                    const catMeta = CATEGORY_META[complaint?.aiCategory] || CATEGORY_META.other;
+                                    const statusMeta = STATUS_META[complaint?.status] || STATUS_META.pending;
                                     return (
                                         <tr key={complaint._id} className="hover:bg-gray-50/50 transition-colors group">
                                             <td className="px-6 py-4">
@@ -355,6 +355,87 @@ const AdminComplaints = () => {
                                     </span>
                                 )}
                             </div>
+
+                            {/* Linked Booking & Payment Details */}
+                            {selectedComplaint.booking && (
+                                <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl shadow-slate-200">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Linked Booking & Payment</h3>
+                                        <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-emerald-500/30">
+                                            <CreditCard size={10}/> {selectedComplaint.booking?.paymentMethod || 'N/A'}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Booking ID</p>
+                                            <p className="text-xs font-mono break-all">{selectedComplaint.booking._id}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Razorpay Payment ID</p>
+                                            <p className="text-xs font-mono break-all text-emerald-400">{selectedComplaint.booking.razorpayPaymentId || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Service</p>
+                                            <p className="text-sm font-black">{selectedComplaint.booking.service?.name || 'Unknown Service'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Total Amount</p>
+                                            <p className="text-xl font-black text-orange-400">₹{selectedComplaint.booking.totalPrice}</p>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Against Provider</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-black">
+                                                    {selectedComplaint.against?.name?.[0] || 'P'}
+                                                </div>
+                                                <p className="text-sm font-bold text-slate-200">{selectedComplaint.against?.name || 'N/A'}</p>
+                                                <p className="text-[10px] text-slate-500">({selectedComplaint.against?.email})</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Refund Action */}
+                                    {selectedComplaint.booking?.paymentMethod === 'online' && selectedComplaint.booking?.paymentStatus !== 'refunded' && (
+                                        <div className="mt-8 pt-6 border-t border-slate-800">
+                                            <button
+                                                onClick={async () => {
+                                                    if (!window.confirm("Are you sure you want to process a full refund for this booking? This will also cancel the booking.")) return;
+                                                    setUpdating(true);
+                                                    try {
+                                                        const res = await axios.post(`${apiUrl}/api/payment/refund`, {
+                                                            bookingId: selectedComplaint.booking._id,
+                                                            notes: `Refund for complaint: ${selectedComplaint.title}`
+                                                        }, { withCredentials: true });
+                                                        toast.success("Refund processed successfully!");
+                                                        fetchComplaints();
+                                                        setTimeout(() => setSelectedComplaint(null), 100);
+                                                    } catch (err) {
+                                                        toast.error(err.response?.data?.message || "Refund failed");
+                                                    } finally {
+                                                        setUpdating(false);
+                                                    }
+                                                }}
+                                                disabled={updating}
+                                                className="w-full py-3 bg-red-600 hover:bg-red-700 disabled:bg-slate-800 text-white font-black rounded-xl shadow-lg shadow-red-900/20 transition-all flex items-center justify-center gap-2"
+                                            >
+                                                {updating ? <RotateCcw className="animate-spin" size={16}/> : <RotateCcw size={16}/>}
+                                                Initiate Full Razorpay Refund
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {selectedComplaint.booking.paymentStatus === 'refunded' && (
+                                        <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-3">
+                                            <CheckCircle className="text-emerald-400" size={20}/>
+                                            <div>
+                                                <p className="text-sm font-black text-emerald-400">Refund Successful</p>
+                                                <p className="text-[10px] text-emerald-500/80 uppercase font-bold tracking-widest">Amount has been sent back to customer</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {/* Admin Response Section */}
                             <div className="border-t border-gray-200 pt-6">

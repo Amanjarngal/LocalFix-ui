@@ -1,17 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import {
     Wrench, Star, Heart, ArrowRight, Search
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const Services = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const navigate = useNavigate();
+    const [urlPincode, setUrlPincode] = useState('');
     const apiUrl = import.meta.env.VITE_API_URL;
+
+    // Handle URL parameters on initial load
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const search = params.get('search');
+        const pin = params.get('pincode');
+        
+        if (search) setSearchQuery(search);
+        if (pin) {
+            setUrlPincode(pin);
+            toast.success(`Location set to ${pin}`, { id: 'pincode-set' });
+        }
+
+        // Directly go to services section if we are searching/pincoding
+        if (search || pin) {
+            setTimeout(() => {
+                const element = document.getElementById('categories-section');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        }
+    }, [location.search]);
 
     useEffect(() => {
         const fetchServices = async () => {
@@ -38,6 +64,12 @@ const Services = () => {
         service.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const handleServiceClick = (serviceId) => {
+        // If we have a pincode from the URL, pass it to the next page
+        const path = `/services/${serviceId}${urlPincode ? `?pincode=${urlPincode}` : ''}`;
+        navigate(path);
+    };
+
     const containerVariants = {
         hidden: { opacity: 0 },
         show: {
@@ -52,7 +84,7 @@ const Services = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white" id="categories-section">
             {/* Services Grid */}
             <div className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
                 {/* Header Row */}
@@ -61,6 +93,11 @@ const Services = () => {
                         <h2 className="text-3xl md:text-4xl font-black text-slate-900">
                             Explore All <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Categories</span>
                         </h2>
+                        {urlPincode && (
+                            <p className="text-blue-600 mt-1 text-sm font-bold flex items-center gap-1">
+                                <Search size={14} /> Showing results for pincode: {urlPincode}
+                            </p>
+                        )}
                         <p className="text-slate-500 mt-2 text-sm font-medium">
                             {services.length} professional services available
                         </p>
@@ -104,7 +141,7 @@ const Services = () => {
                             <motion.div
                                 variants={itemVariants}
                                 key={service._id}
-                                onClick={() => navigate(`/services/${service._id}`)}
+                                onClick={() => handleServiceClick(service._id)}
                                 className="group relative bg-white rounded-3xl border border-slate-100 hover:border-blue-200 transition-all duration-500 cursor-pointer shadow-sm hover:shadow-[0_20px_60px_-15px_rgba(37,99,235,0.15)] overflow-hidden"
                             >
                                 {/* Service Image */}

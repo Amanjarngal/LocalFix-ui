@@ -267,7 +267,7 @@ const ProviderBookings = () => {
                                 {displayedBookings.map(booking => (
                                     <tr key={booking._id} className="hover:bg-slate-50/50 transition">
                                         <td className="p-6">
-                                            <div className="text-slate-900 font-bold mb-1 uppercase text-xs">#{booking._id.slice(-8)}</div>
+                                            <div className="text-slate-900 font-bold mb-1 uppercase text-[10px] font-mono break-all leading-none">ID: {booking._id}</div>
                                             <div className="text-slate-500 text-xs flex items-center gap-1"><Calendar size={12}/>{new Date(booking.scheduledDate).toLocaleDateString()}</div>
                                         </td>
                                         <td className="p-6">
@@ -329,7 +329,7 @@ const ProviderBookings = () => {
                         <div className="sticky top-0 bg-white/90 backdrop-blur-md p-6 border-b border-slate-100 flex items-center justify-between z-10">
                             <div>
                                 <h3 className="text-2xl font-black text-slate-900">Job Dashboard</h3>
-                                <p className="text-sm font-medium text-slate-500">Ref: #{selectedOrder._id.slice(-8).toUpperCase()}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">ID: <span className="font-mono text-slate-900">{selectedOrder._id}</span></p>
                             </div>
                             <button onClick={() => { setSelectedOrder(null); setIsCompleting(false); }} className="p-2.5 bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 rounded-xl transition">
                                 <X size={24} />

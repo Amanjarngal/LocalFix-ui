@@ -11,7 +11,8 @@ import {
     Briefcase,
     Eye,
     X,
-    Phone
+    Phone,
+    Star
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSocket } from '../../context/SocketContext';
@@ -331,6 +332,79 @@ const BookingsManagement = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Work Proof - Images */}
+                            {(selectedBooking.beforeImage || selectedBooking.afterImage) && (
+                                <div className="pt-6 border-t border-gray-100">
+                                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Work Proof (Images)</h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {selectedBooking.beforeImage && (
+                                            <div className="space-y-2">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Before Service</p>
+                                                <div className="aspect-video rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+                                                    <img 
+                                                        src={selectedBooking.beforeImage.startsWith('http') ? selectedBooking.beforeImage : `${apiUrl}/${selectedBooking.beforeImage}`} 
+                                                        alt="Before" 
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                        {selectedBooking.afterImage && (
+                                            <div className="space-y-2">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">After Service</p>
+                                                <div className="aspect-video rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
+                                                    <img 
+                                                        src={selectedBooking.afterImage.startsWith('http') ? selectedBooking.afterImage : `${apiUrl}/${selectedBooking.afterImage}`} 
+                                                        alt="After" 
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Reviews & Ratings */}
+                            {(selectedBooking.customerRating || selectedBooking.providerRating) && (
+                                <div className="pt-6 border-t border-gray-100">
+                                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Ratings & Reviews</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Customer Review of Provider */}
+                                        {selectedBooking.customerRating && (
+                                            <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100/50">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Customer Feedback</p>
+                                                    <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-blue-100 shadow-sm">
+                                                        <Star size={12} className="fill-amber-400 text-amber-400" />
+                                                        <span className="text-sm font-black text-slate-900">{selectedBooking.customerRating}</span>
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-slate-600 font-medium italic leading-relaxed">
+                                                    "{selectedBooking.customerReview || 'No written review'}"
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Provider Review of Customer */}
+                                        {selectedBooking.providerRating && (
+                                            <div className="bg-purple-50/50 p-6 rounded-3xl border border-purple-100/50">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest">Provider Feedback</p>
+                                                    <div className="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-purple-100 shadow-sm">
+                                                        <Star size={12} className="fill-amber-400 text-amber-400" />
+                                                        <span className="text-sm font-black text-slate-900">{selectedBooking.providerRating}</span>
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-slate-600 font-medium italic leading-relaxed">
+                                                    "{selectedBooking.providerReview || 'No written review'}"
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

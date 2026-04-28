@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Sparkles, AlertCircle, Wrench, Clock, CreditCard, ShieldAlert, RotateCcw, UserX, Smartphone, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 // ─── Complaint category definitions ───
 const COMPLAINT_CATEGORIES = [
@@ -35,12 +36,27 @@ const Chatbot = () => {
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const apiUrl = import.meta.env.VITE_API_URL;
+    const { user } = useAuth();
+    const [bookings, setBookings] = useState([]);
     const [pulseVisible, setPulseVisible] = useState(true);
 
     useEffect(() => {
         const timer = setTimeout(() => setPulseVisible(false), 6000);
         return () => clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+        const fetchBookings = async () => {
+            if (!user || !isOpen) return;
+            try {
+                const res = await axios.get(`${apiUrl}/api/booking/my-bookings`, { withCredentials: true });
+                if (res.data.success) setBookings(res.data.data.slice(0, 3)); // Get last 3
+            } catch (err) {
+                console.error("Chatbot: Failed to fetch bookings", err);
+            }
+        };
+        fetchBookings();
+    }, [user, isOpen, apiUrl]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -200,6 +216,32 @@ const Chatbot = () => {
                                                 );
                                             })}
                                         </div>
+
+                                        {bookings.length > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-slate-100">
+                                                <p className="text-[11px] text-slate-400 font-black uppercase tracking-widest mb-2">Your Recent Bookings:</p>
+                                                <div className="space-y-2">
+                                                    {bookings.map((b) => (
+                                                        <button
+                                                            key={b._id}
+                                                            onClick={() => {
+                                                                const text = `I have an issue with my booking ${b._id}. ${b.problemIds?.[0]?.title || 'Service'} on ${new Date(b.scheduledDate).toLocaleDateString()}.`;
+                                                                handleSend(text);
+                                                            }}
+                                                            className="w-full text-left p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-blue-50 transition-all group"
+                                                        >
+                                                            <div className="flex justify-between items-center mb-1">
+                                                                <span className="text-[11px] font-bold text-slate-400 group-hover:text-blue-600 transition-colors">
+                                                                    ID: <span className="text-slate-900 font-mono">{b._id}</span>
+                                                                </span>
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{new Date(b.scheduledDate).toLocaleDateString()}</span>
+                                                            </div>
+                                                            <p className="text-[12px] font-bold text-slate-700 truncate">{b.problemIds?.[0]?.title || 'Service'}</p>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </motion.div>
                             )}

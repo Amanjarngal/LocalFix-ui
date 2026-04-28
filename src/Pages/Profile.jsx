@@ -293,7 +293,7 @@ const Profile = () => {
                                                             : booking.problemItems[0].title)
                                                         : booking.service?.name}
                                                 </h3>
-                                                <p className="text-sm text-slate-500">Booking ID: <span className="font-mono text-xs">#{booking._id.slice(-8)}</span></p>
+                                                <p className="text-sm text-slate-500">ID: <span className="font-mono text-[10px] break-all">{booking._id}</span></p>
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                                 booking.status === 'pending' ? 'bg-amber-50 text-amber-600' :
@@ -368,7 +368,7 @@ const Profile = () => {
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
                                                 <h3 className="text-base font-bold text-slate-900">{complaint.title}</h3>
-                                                <p className="text-xs text-slate-500 mt-0.5">Complaint ID: <span className="font-mono">#{complaint._id?.slice(-8)}</span></p>
+                                                <p className="text-xs text-slate-500 mt-0.5">ID: <span className="font-mono text-[10px] break-all">{complaint._id}</span></p>
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                                 complaint.status === 'pending' ? 'bg-amber-50 text-amber-600' :
@@ -437,7 +437,7 @@ const Profile = () => {
                                                 <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition">
                                                     {request.projectTitle}
                                                 </h3>
-                                                <p className="text-sm text-slate-500">Project ID: <span className="font-mono text-xs">#{request._id.slice(-8)}</span></p>
+                                                <p className="text-sm text-slate-500">ID: <span className="font-mono text-[10px] break-all">{request._id}</span></p>
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                                 request.status === 'pending' ? 'bg-amber-50 text-amber-600' :
@@ -781,7 +781,7 @@ const Profile = () => {
                         <div className="bg-slate-50 px-8 py-6 border-b border-slate-100 flex items-center justify-between">
                             <div>
                                 <h3 className="text-xl font-black text-slate-900">Booking Details</h3>
-                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">ID: #{selectedBooking._id.slice(-12)}</p>
+                                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">ID: <span className="font-mono">{selectedBooking._id}</span></p>
                             </div>
                             <button 
                                 onClick={() => setSelectedBooking(null)}

@@ -306,8 +306,8 @@ const Cart = () => {
                     </p>
 
                     <div className="bg-slate-50 rounded-2xl p-6 mb-8 border border-slate-100 text-left">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Booking Reference</p>
-                        <p className="text-sm font-mono text-slate-900 font-bold">#{lastBookingId?.slice(-12)}</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Booking ID</p>
+                        <p className="text-xs font-mono text-slate-900 font-bold break-all">ID: {lastBookingId}</p>
                     </div>
 
                     <div className="space-y-3">
@@ -430,9 +430,13 @@ const Cart = () => {
                                                     type="text"
                                                     placeholder="Pincode"
                                                     required
+                                                    maxLength={6}
                                                     className="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
                                                     value={newAddress.pincode}
-                                                    onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length <= 6) setNewAddress({ ...newAddress, pincode: val });
+                                                    }}
                                                 />
                                                 <input
                                                     type="text"
@@ -440,15 +444,22 @@ const Cart = () => {
                                                     required
                                                     className="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
                                                     value={newAddress.contactName}
-                                                    onChange={(e) => setNewAddress({ ...newAddress, contactName: e.target.value })}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                                                        setNewAddress({ ...newAddress, contactName: val });
+                                                    }}
                                                 />
                                                 <input
                                                     type="tel"
                                                     placeholder="Mobile Number"
                                                     required
+                                                    maxLength={10}
                                                     className="w-full px-4 py-3 rounded-xl border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
                                                     value={newAddress.contactNumber}
-                                                    onChange={(e) => setNewAddress({ ...newAddress, contactNumber: e.target.value })}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length <= 10) setNewAddress({ ...newAddress, contactNumber: val });
+                                                    }}
                                                 />
                                             </div>
                                             <div className="flex gap-3">
@@ -542,16 +553,23 @@ const Cart = () => {
                                                     type="text"
                                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                                                     value={bookingData.contactName}
-                                                    onChange={(e) => setBookingData({ ...bookingData, contactName: e.target.value })}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                                                        setBookingData({ ...bookingData, contactName: val });
+                                                    }}
                                                 />
                                             </div>
                                             <div>
                                                 <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Contact Number</label>
                                                 <input
                                                     type="tel"
+                                                    maxLength={10}
                                                     className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                                                     value={bookingData.contactNumber}
-                                                    onChange={(e) => setBookingData({ ...bookingData, contactNumber: e.target.value })}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length <= 10) setBookingData({ ...bookingData, contactNumber: val });
+                                                    }}
                                                 />
                                             </div>
                                         </div>

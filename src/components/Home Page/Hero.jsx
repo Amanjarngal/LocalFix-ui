@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Zap, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+    const [pincode, setPincode] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const navigate = useNavigate();
+
+    const handleFindExperts = () => {
+        // If pincode is provided, we pass it to the services page
+        // If searchQuery is provided, we can also pass it
+        const params = new URLSearchParams();
+        if (pincode) params.append('pincode', pincode);
+        if (searchQuery) params.append('search', searchQuery);
+
+        navigate(`/services?${params.toString()}`);
+    };
+
     return (
         <section className="relative pt-32 pb-20 bg-white overflow-hidden min-h-screen flex flex-col items-center justify-center">
             {/* Massive Abstract Glows */}
@@ -53,7 +68,9 @@ const Hero = () => {
                         <MapPin className="text-slate-400" size={24} />
                         <input 
                             type="text" 
-                            placeholder="Zip code or Area" 
+                            placeholder="Pincode (e.g. 184142)" 
+                            value={pincode}
+                            onChange={(e) => setPincode(e.target.value)}
                             className="bg-transparent border-none outline-none text-slate-900 w-full font-bold placeholder:font-medium placeholder:text-slate-400"
                         />
                     </div>
@@ -63,10 +80,15 @@ const Hero = () => {
                         <input 
                             type="text" 
                             placeholder="What do you need help with?" 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             className="bg-transparent border-none outline-none text-slate-900 w-full font-bold placeholder:font-medium placeholder:text-slate-400"
                         />
                     </div>
-                    <button className="w-full md:w-auto px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-full transition-colors flex-shrink-0 shadow-lg shadow-blue-600/30">
+                    <button 
+                        onClick={handleFindExperts}
+                        className="w-full md:w-auto px-10 py-5 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest text-xs rounded-full transition-colors flex-shrink-0 shadow-lg shadow-blue-600/30"
+                    >
                         Find Experts
                     </button>
                 </motion.div>

@@ -42,7 +42,7 @@ const Navbar = () => {
                                 <Hammer className="text-white h-5 w-5 md:h-6 md:w-6" />
                             </div>
                             <span className="text-xl md:text-2xl font-black tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
-                                Local<span className="text-blue-600 group-hover:text-slate-900 transition-colors">Fixer</span>
+                                Local<span className="text-blue-600 group-hover:text-slate-900 transition-colors">Fix</span>
                             </span>
                         </Link>
 

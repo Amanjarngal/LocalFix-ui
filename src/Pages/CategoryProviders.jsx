@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import {
     MapPin,
     Star,
@@ -20,6 +21,7 @@ import {
 const CategoryProviders = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [providers, setProviders] = useState([]);
     const [category, setCategory] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -31,6 +33,25 @@ const CategoryProviders = () => {
     const [reviewedProvider, setReviewedProvider] = useState(null);
 
     const apiUrl = import.meta.env.VITE_API_URL;
+
+    const handleSearch = useCallback(async (searchPin = pincode, isAuto = false) => {
+        if (!searchPin || searchPin.length !== 6) return;
+        setSearching(true);
+        try {
+            const res = await axios.get(`${apiUrl}/api/providers/search?serviceId=${id}&pincode=${searchPin}`);
+            setProviders(res.data.data);
+            if (res.data.data.length > 0) {
+                toast.success(`Showing experts in ${searchPin}`, { id: 'search-toast' });
+            } else {
+                toast.error(`No experts found in ${searchPin}`, { id: 'search-toast' });
+            }
+        } catch (err) {
+            console.error("Search failed", err);
+            toast.error("Failed to fetch location-based results");
+        } finally {
+            setSearching(false);
+        }
+    }, [id, apiUrl, pincode]);
 
     const fetchReviews = async (provider) => {
         setReviewedProvider(provider);
@@ -49,15 +70,23 @@ const CategoryProviders = () => {
     // Fetch initial providers and category info
     useEffect(() => {
         const fetchData = async () => {
+            const params = new URLSearchParams(location.search);
+            const urlPin = params.get('pincode');
+            if (urlPin) setPincode(urlPin);
+
             const cachedCats = sessionStorage.getItem('cachedServices');
             if (cachedCats) {
                 const parsedCats = JSON.parse(cachedCats);
                 setCategory(parsedCats.find(c => c._id === id));
             }
-            const cachedProvs = sessionStorage.getItem(`cachedProviders_${id}`);
-            if (cachedProvs) {
-                setProviders(JSON.parse(cachedProvs));
-                setLoading(false);
+            
+            // If no pincode in URL, try loading from cache
+            if (!urlPin) {
+                const cachedProvs = sessionStorage.getItem(`cachedProviders_${id}`);
+                if (cachedProvs) {
+                    setProviders(JSON.parse(cachedProvs));
+                    setLoading(false);
+                }
             }
 
             try {
@@ -68,9 +97,13 @@ const CategoryProviders = () => {
                 setCategory(allCats.find(c => c._id === id));
 
                 // Get Providers for this category
-                const provRes = await axios.get(`${apiUrl}/api/providers/search?serviceId=${id}`);
-                setProviders(provRes.data.data);
-                sessionStorage.setItem(`cachedProviders_${id}`, JSON.stringify(provRes.data.data));
+                if (urlPin && urlPin.length === 6) {
+                    await handleSearch(urlPin, true);
+                } else {
+                    const provRes = await axios.get(`${apiUrl}/api/providers/search?serviceId=${id}`);
+                    setProviders(provRes.data.data);
+                    sessionStorage.setItem(`cachedProviders_${id}`, JSON.stringify(provRes.data.data));
+                }
             } catch (err) {
                 console.error("Failed to load providers", err);
             } finally {
@@ -78,20 +111,7 @@ const CategoryProviders = () => {
             }
         };
         fetchData();
-    }, [id, apiUrl]);
-
-    const handleSearch = async () => {
-        if (!pincode || pincode.length !== 6) return;
-        setSearching(true);
-        try {
-            const res = await axios.get(`${apiUrl}/api/providers/search?serviceId=${id}&pincode=${pincode}`);
-            setProviders(res.data.data);
-        } catch (err) {
-            console.error("Search failed", err);
-        } finally {
-            setSearching(false);
-        }
-    };
+    }, [id, apiUrl, location.search, handleSearch]);
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
@@ -156,7 +176,7 @@ const CategoryProviders = () => {
                             </div>
 
                             <button
-                                onClick={handleSearch}
+                                onClick={() => handleSearch()}
                                 disabled={searching || pincode.length !== 6}
                                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-black py-4 rounded-xl transition-colors shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 text-lg disabled:shadow-none"
                             >
@@ -186,7 +206,7 @@ const CategoryProviders = () => {
                             We don't have any experts in <span className="text-blue-600 font-bold">"{pincode || 'this area'}"</span> yet. Try another pincode or check back later!
                         </p>
                         <button
-                            onClick={() => { setPincode(''); fetchData(); }}
+                            onClick={() => { setPincode(''); navigate(`/services/${id}`); }}
                             className="mt-8 px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition"
                         >
                             Show All Experts
